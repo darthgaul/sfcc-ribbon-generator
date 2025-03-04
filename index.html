@@ -130,34 +130,47 @@
             // Limit to 3 colors for consistency, shuffle for variety
             colors = shuffleArray(colors.slice(0, 3));
 
-            // Create diverse vertical stripes (10 total: 5 on each side, perfectly mirrored, with varied widths, centered from the middle)
-            const totalStripes = 10; // 5 on each side, mirrored
-            const stripeWidths = [30, 25, 20, 15, 10]; // Diverse widths (thick to thin), total 100px per side
+            // Define stripe configuration as a fixed, symmetrical grid (5 stripes per side, mirrored)
+            const stripeConfig = [
+                { width: 30, colorIndex: 0 }, // Thick stripe
+                { width: 25, colorIndex: 1 }, // Medium stripe
+                { width: 20, colorIndex: 2 }, // Medium-thin stripe
+                { width: 15, colorIndex: 0 }, // Thin stripe
+                { width: 10, colorIndex: 1 }  // Very thin stripe
+            ];
+            const totalWidthPerSide = stripeConfig.reduce((sum, stripe) => sum + stripe.width, 0); // 100px per side
             const center = canvas.width / 2; // Center point of the canvas (150px)
-            const halfWidthSum = stripeWidths.reduce((sum, width) => sum + width, 0); // Total width per side (100px)
 
-            // Draw left side from center outward (leftward)
-            let leftX = center - halfWidthSum; // Start left of center
-            for (let i = 0; i < stripeWidths.length; i++) {
-                const width = stripeWidths[i];
-                ctx.fillStyle = colors[i % colors.length];
-                ctx.fillRect(leftX, 0, width, canvas.height); // Solid main color
-                leftX += width; // Move rightward toward center
-            }
+            // Draw stripes simultaneously from center outward, ensuring perfect mirroring
+            let leftX = center - totalWidthPerSide; // Start left of center
+            let rightX = center; // Start at center for right side
 
-            // Draw right side from center outward (rightward)
-            let rightX = center; // Start at center
-            for (let i = stripeWidths.length - 1; i >= 0; i--) {
-                const width = stripeWidths[i]; // Use the same widths in reverse
-                ctx.fillStyle = colors[(stripeWidths.length - 1 - i) % colors.length];
-                ctx.fillRect(rightX, 0, width, canvas.height); // Solid main color, mirrored
-                rightX += width; // Move rightward
-            }
+            // Draw left side (moving leftward)
+            stripeConfig.forEach((stripe, index) => {
+                ctx.fillStyle = colors[stripe.colorIndex % colors.length];
+                ctx.fillRect(leftX, 0, stripe.width, canvas.height); // Solid main color
+                leftX += stripe.width; // Move toward center
+            });
 
-            // Verify total width covers the canvas (should be 300px exactly)
+            // Draw right side (moving rightward, mirrored)
+            stripeConfig.slice().reverse().forEach((stripe, index) => {
+                ctx.fillStyle = colors[(stripeConfig.length - 1 - index) % colors.length];
+                ctx.fillRect(rightX, 0, stripe.width, canvas.height); // Solid main color, mirrored
+                rightX += stripe.width; // Move away from center
+            });
+
+            // Verify symmetry and fill any gaps (should not be needed, but added for robustness)
             if (leftX < 0 || rightX > canvas.width) {
-                console.warn('Stripe width calculation issue:', leftX, rightX);
-                // Adjust if necessary, but current math should be exact
+                console.warn('Symmetry issue detected:', leftX, rightX);
+                // Fill any remaining space with the first color to ensure no gaps
+                if (leftX < 0) {
+                    ctx.fillStyle = colors[0];
+                    ctx.fillRect(0, 0, -leftX, canvas.height);
+                }
+                if (rightX > canvas.width) {
+                    ctx.fillStyle = colors[0];
+                    ctx.fillRect(canvas.width - (rightX - canvas.width), 0, rightX - canvas.width, canvas.height);
+                }
             }
 
             // Add evenly distributed, transparent horizontal lines (15 lines, 75% transparent)
