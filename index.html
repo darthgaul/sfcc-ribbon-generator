@@ -64,6 +64,7 @@
         <canvas id="canvas" width="300" height="100"></canvas>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
     <script>
         const uploadBtn = document.getElementById('upload-btn');
         const logoUpload = document.getElementById('logo-upload');
@@ -99,40 +100,82 @@
             }
         });
 
-        // Generate ribbon (simplified version based on logo colors)
+        // Generate ribbon with diversified colors and many stripes
         function generateRibbon() {
             if (!uploadedImage) return;
 
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Get dominant colors from logo (simplified; in reality, use a library like ColorThief)
-            let colors = extractDominantColors(uploadedImage);
-            if (colors.length < 3) {
-                // Fallback: add gray or black if fewer colors
-                while (colors.length < 3) {
-                    colors.push(colors.length === 1 ? '#333333' : '#000000');
-                }
+            // Extract dominant colors from the logo using ColorThief
+            const colorThief = new ColorThief();
+            const palette = colorThief.getPalette(uploadedImage, 5); // Get up to 5 dominant colors
+            let colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+
+            // If fewer than 5 colors, add fallback colors (gray, black) for variety
+            while (colors.length < 5) {
+                colors.push(colors.length % 2 === 0 ? '#333333' : '#000000');
             }
 
-            // Draw vertical stripes (like your examples)
-            const stripeWidth = canvas.width / 3;
-            for (let i = 0; i < 3; i++) {
-                ctx.fillStyle = colors[i];
-                ctx.fillRect(i * stripeWidth, 0, stripeWidth, canvas.height);
-                
+            // Shuffle colors for variety
+            colors = shuffleArray(colors);
+
+            // Create many vertical stripes (7 total: 3 thin, 4 thick, symmetrical around center)
+            const totalStripes = 7;
+            const stripeWidths = [20, 40, 20, 40, 20, 40, 20]; // Thin (20px), thick (40px), mirrored
+            let currentX = 0;
+
+            for (let i = 0; i < totalStripes / 2; i++) {
+                const leftWidth = stripeWidths[i];
+                const rightWidth = stripeWidths[totalStripes - 1 - i]; // Mirror right side
+
+                // Left stripe
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.fillRect(currentX, 0, leftWidth, canvas.height);
+
                 // Add texture (diagonal lines for a striped effect)
                 ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
                 ctx.lineWidth = 1;
                 for (let y = -canvas.height; y < canvas.width; y += 20) {
                     ctx.beginPath();
-                    ctx.moveTo(i * stripeWidth + y, 0);
-                    ctx.lineTo(i * stripeWidth + y + canvas.height, canvas.height);
+                    ctx.moveTo(currentX + y, 0);
+                    ctx.lineTo(currentX + y + canvas.height, canvas.height);
+                    ctx.stroke();
+                }
+
+                currentX += leftWidth;
+
+                // Right stripe (mirrored)
+                ctx.fillStyle = colors[(i + 1) % colors.length]; // Use next color for variety
+                ctx.fillRect(canvas.width - currentX, 0, rightWidth, canvas.height);
+
+                // Add texture to right stripe
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                ctx.lineWidth = 1;
+                for (let y = -canvas.height; y < canvas.width; y += 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(canvas.width - currentX + y, 0);
+                    ctx.lineTo(canvas.width - currentX + y + canvas.height, canvas.height);
                     ctx.stroke();
                 }
             }
 
-            // Add sponsor number or text (e.g., "1" or "Sponsor")
+            // Center stripe (thick, different color)
+            const centerWidth = 40;
+            ctx.fillStyle = colors[colors.length - 1]; // Use last color for center
+            ctx.fillRect((canvas.width - centerWidth) / 2, 0, centerWidth, canvas.height);
+
+            // Add texture to center stripe
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1;
+            for (let y = -canvas.height; y < canvas.width; y += 20) {
+                ctx.beginPath();
+                ctx.moveTo((canvas.width - centerWidth) / 2 + y, 0);
+                ctx.lineTo((canvas.width - centerWidth) / 2 + y + canvas.height, canvas.height);
+                ctx.stroke();
+            }
+
+            // Add sponsor number or text (gold, centered)
             ctx.fillStyle = '#FFD700'; // Gold color for text
             ctx.font = 'bold 40px Arial';
             ctx.textAlign = 'center';
@@ -145,23 +188,21 @@
             downloadBtn.disabled = false;
         }
 
-        // Simplified dominant color extraction (placeholder; use ColorThief in production)
-        function extractDominantColors(img) {
-            // This is a mock implementation; in reality, use ColorThief or similar
-            const colors = ['#1a2b3c', '#4a90e2', '#ffffff']; // Default colors
-            if (Math.random() > 0.5) { // Simulate variation
-                colors[0] = '#333333'; // Gray fallback
-                colors[1] = '#000000'; // Black fallback
+        // Shuffle array function for randomizing colors
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
             }
-            return colors.slice(0, Math.min(3, colors.length)); // Limit to 3 colors
+            return array;
         }
 
         // Generate ribbon button
         generateBtn.addEventListener('click', () => generateRibbon());
 
-        // Regenerate with new random colors
+        // Regenerate with new colors
         regenerateBtn.addEventListener('click', () => {
-            generateRibbon(); // Generate a new ribbon
+            generateRibbon(); // Generate a new ribbon with shuffled colors
         });
 
         // Go back to previous ribbon
