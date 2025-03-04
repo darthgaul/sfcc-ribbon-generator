@@ -311,10 +311,15 @@
             }
         });
         downloadBtn.addEventListener('click', () => {
+            console.log('Download button clicked');
+            const dataUrl = canvas.toDataURL('image/png');
             const link = document.createElement('a');
             link.download = 'sfcc-sponsorship-ribbon.png';
-            link.href = canvas.toDataURL('image/png');
+            link.href = dataUrl;
+            link.target = '_blank'; // Open in new tab/window
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link); // Clean up
         });
 
         console.log('Script ended');
