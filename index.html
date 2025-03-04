@@ -100,7 +100,7 @@
             }
         });
 
-        // Generate ribbon with diversified colors, mirrored stripes, and horizontal lines
+        // Generate ribbon with logo-based colors, mirrored diverse stripes, and horizontal lines
         function generateRibbon() {
             if (!uploadedImage) return;
 
@@ -112,17 +112,31 @@
             const palette = colorThief.getPalette(uploadedImage, 5); // Get up to 5 dominant colors
             let colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`);
 
-            // If fewer than 5 colors, add fallback colors (gray, black) for variety
-            while (colors.length < 5) {
-                colors.push(colors.length % 2 === 0 ? '#333333' : '#000000');
+            // Filter to only blue, red, white (approximate ranges) and add gray as a small accent
+            colors = colors.filter(color => {
+                const [r, g, b] = color.match(/\d+/g).map(Number);
+                // Approximate blue (B > R and B > G, B > 100), red (R > G and R > B, R > 100), white (R, G, B > 200)
+                return (b > r && b > g && b > 100) || // Blue
+                       (r > g && r > b && r > 100) || // Red
+                       (r > 200 && g > 200 && b > 200); // White
+            });
+
+            // Ensure we have at least 3 colors, defaulting to blue, red, white if fewer
+            while (colors.length < 3) {
+                if (colors.length === 0) colors.push('#0000FF'); // Blue
+                if (colors.length === 1) colors.push('#FF0000'); // Red
+                if (colors.length === 2) colors.push('#FFFFFF'); // White
             }
 
-            // Shuffle colors for variety
+            // Add gray as a small accent color (thin bars)
+            const accentColor = '#333333'; // Gray
+
+            // Shuffle base colors for variety
             colors = shuffleArray(colors);
 
-            // Create many vertical stripes (8 total: 4 thin, 4 thick, mirrored around center)
-            const totalStripes = 8; // 4 on each side, mirrored
-            const stripeWidths = [25, 25, 25, 25]; // Even widths for simplicity (25px each for symmetry)
+            // Create diverse vertical stripes (10 total: 5 on each side, mirrored, with varied widths)
+            const totalStripes = 10; // 5 on each side, mirrored
+            const stripeWidths = [15, 30, 20, 25, 10]; // Diverse widths (thin, thick, medium), total 100px per side
             let currentX = 0;
             const halfWidth = canvas.width / 2;
 
@@ -130,7 +144,14 @@
             for (let i = 0; i < stripeWidths.length; i++) {
                 const width = stripeWidths[i];
                 ctx.fillStyle = colors[i % colors.length];
-                ctx.fillRect(currentX, 0, width, canvas.height); // Solid color, no texture
+                ctx.fillRect(currentX, 0, width, canvas.height); // Solid main color
+
+                // Add thin gray accent bar on the left edge of the blue bar (e.g., first or third stripe)
+                if (i === 0 || i === 2) { // Add gray accent to first and third bars (blue)
+                    ctx.fillStyle = accentColor;
+                    ctx.fillRect(currentX, 0, 5, canvas.height); // 5px thin gray bar
+                }
+
                 currentX += width;
             }
 
@@ -139,13 +160,20 @@
             for (let i = stripeWidths.length - 1; i >= 0; i--) {
                 const width = stripeWidths[i];
                 ctx.fillStyle = colors[(stripeWidths.length - 1 - i) % colors.length];
-                ctx.fillRect(canvas.width - currentX - width, 0, width, canvas.height); // Solid color
+                ctx.fillRect(canvas.width - currentX - width, 0, width, canvas.height); // Solid main color
+
+                // Add thin gray accent bar on the right edge of the mirrored blue bar
+                if (i === 0 || i === 2) { // Mirror the accent on the first and third bars (blue)
+                    ctx.fillStyle = accentColor;
+                    ctx.fillRect(canvas.width - currentX - width - 5, 0, 5, canvas.height); // 5px thin gray bar
+                }
+
                 currentX += width;
             }
 
-            // Add evenly distributed, transparent horizontal lines (15 lines)
+            // Add evenly distributed, transparent horizontal lines (15 lines, 75% transparent)
             const lineSpacing = canvas.height / 16; // 15 spaces for 16 lines (top and bottom included)
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.33)'; // 33% opacity (50% more transparent than 100%)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)'; // 25% opacity (75% transparent)
             ctx.lineWidth = 1;
             for (let i = 1; i < 16; i++) { // Skip top and bottom for cleaner look, create 15 lines
                 ctx.beginPath();
