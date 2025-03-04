@@ -100,6 +100,17 @@
             }
         });
 
+        // Calculate color distance for spacing out similar colors
+        function colorDistance(color1, color2) {
+            const [r1, g1, b1] = color1.match(/\d+/g).map(Number);
+            const [r2, g2, b2] = color2.match(/\d+/g).map(Number);
+            return Math.sqrt(
+                Math.pow(r2 - r1, 2) +
+                Math.pow(g2 - g1, 2) +
+                Math.pow(b2 - b1, 2)
+            );
+        }
+
         // Generate ribbon with colors directly from the logo, centered and perfectly mirrored diverse stripes, and horizontal lines
         function generateRibbon() {
             if (!uploadedImage) return;
@@ -109,22 +120,40 @@
 
             // Extract dominant colors directly from the logo using ColorThief
             const colorThief = new ColorThief();
-            const palette = colorThief.getPalette(uploadedImage, 5, 10); // Higher quality for more accurate colors
+            const palette = colorThief.getPalette(uploadedImage, 5, 20); // Higher quality and more samples for dark logos and gradients
             let colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`);
 
-            // Use raw colors directly, but validate for logo-like colors (blue, white, red ranges with tolerance)
+            // Filter and space out colors to avoid similar hues, prioritizing dark colors for dark logos
             colors = colors.filter(color => {
                 const [r, g, b] = color.match(/\d+/g).map(Number);
-                const isBlue = b > 50 && (r < b * 1.5) && (g < b * 1.5); // More lenient blue (deep or light blue)
-                const isWhite = r > 200 && g > 200 && b > 200; // White
-                const isRed = r > 50 && (b < r * 0.5) && (g < r * 0.5); // More lenient red (bright or muted red)
-                return isBlue || isWhite || isRed;
+                // Allow dark colors (low R, G, B) and bright colors, but prioritize logo relevance
+                const brightness = (r + g + b) / 3;
+                const isDark = brightness < 128; // Consider colors dark if average brightness is below 128
+                const isBright = brightness > 200; // Consider colors bright if above 200
+                return isDark || isBright; // Include dark and bright colors, capturing dark logos
             });
 
-            // If fewer than 3 colors, use raw palette or add neutral fallbacks
+            // Remove similar colors (minimum distance of 100 for distinctness)
+            const uniqueColors = [];
+            for (let i = 0; i < colors.length; i++) {
+                let isUnique = true;
+                for (let j = 0; j < uniqueColors.length; j++) {
+                    if (colorDistance(colors[i], uniqueColors[j]) < 100) {
+                        isUnique = false;
+                        break;
+                    }
+                }
+                if (isUnique) uniqueColors.push(colors[i]);
+            }
+            colors = uniqueColors;
+
+            // Ensure at least 3 distinct colors, using raw palette or random dark/bright fallbacks
             while (colors.length < 3) {
                 if (colors.length === 0) colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`); // Use raw palette
-                if (colors.length < 3) colors.push(`rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`); // Random neutral if needed
+                if (colors.length < 3) {
+                    const brightness = Math.random() < 0.5 ? Math.floor(Math.random() * 128) : 200 + Math.floor(Math.random() * 56); // Dark or bright
+                    colors.push(`rgb(${brightness}, ${brightness}, ${brightness})`); // Neutral dark or bright fallback
+                }
             }
 
             // Limit to 3 colors for consistency, shuffle for variety
@@ -141,7 +170,7 @@
             const totalWidthPerSide = stripeConfig.reduce((sum, stripe) => sum + stripe.width, 0); // 100px per side
             const center = canvas.width / 2; // Center point of the canvas (150px)
 
-            // Draw stripes simultaneously from center outward, ensuring perfect mirroring
+            // Draw stripes simultaneously from center outward, ensuring perfect mirroring and no gaps
             let leftX = center - totalWidthPerSide; // Start left of center
             let rightX = center; // Start at center for right side
 
@@ -159,18 +188,14 @@
                 rightX += stripe.width; // Move away from center
             });
 
-            // Verify symmetry and fill any gaps (should not be needed, but added for robustness)
-            if (leftX < 0 || rightX > canvas.width) {
-                console.warn('Symmetry issue detected:', leftX, rightX);
-                // Fill any remaining space with the first color to ensure no gaps
-                if (leftX < 0) {
-                    ctx.fillStyle = colors[0];
-                    ctx.fillRect(0, 0, -leftX, canvas.height);
-                }
-                if (rightX > canvas.width) {
-                    ctx.fillStyle = colors[0];
-                    ctx.fillRect(canvas.width - (rightX - canvas.width), 0, rightX - canvas.width, canvas.height);
-                }
+            // Ensure no gaps on sides by filling any remaining space with the first color
+            if (leftX < 0) {
+                ctx.fillStyle = colors[0];
+                ctx.fillRect(0, 0, -leftX, canvas.height); // Fill left gap
+            }
+            if (rightX > canvas.width) {
+                ctx.fillStyle = colors[0];
+                ctx.fillRect(canvas.width - (rightX - canvas.width), 0, rightX - canvas.width, canvas.height); // Fill right gap
             }
 
             // Add evenly distributed, transparent horizontal lines (15 lines, 75% transparent)
