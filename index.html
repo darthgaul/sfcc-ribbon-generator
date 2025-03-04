@@ -112,22 +112,22 @@
             const palette = colorThief.getPalette(uploadedImage, 5); // Get up to 5 dominant colors
             let colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`);
 
-            // Filter to only blue, white, and red (strict ranges)
+            // Filter to only blue, white, and red (more lenient ranges to match logo colors)
             colors = colors.filter(color => {
                 const [r, g, b] = color.match(/\d+/g).map(Number);
-                // Blue: High blue, low red/green (B > 150, R < 50, G < 50)
+                // Blue: High blue, moderate red/green (B > 100, R < 150, G < 150)
                 // White: High R, G, B (> 200)
-                // Red: High red, low blue/green (R > 150, B < 50, G < 50)
-                return (b > 150 && r < 50 && g < 50) || // Blue
+                // Red: High red, low blue/green (R > 100, B < 100, G < 100)
+                return (b > 100 && r < 150 && g < 150) || // Blue
                        (r > 200 && g > 200 && b > 200) || // White
-                       (r > 150 && b < 50 && g < 50); // Red
+                       (r > 100 && b < 100 && g < 100); // Red
             });
 
-            // Ensure we have at least 3 colors, defaulting to blue, white, red if fewer
+            // Ensure we have at least 3 colors, defaulting to logo-like blue, white, red if fewer
             while (colors.length < 3) {
-                if (colors.length === 0) colors.push('#0000FF'); // Blue
+                if (colors.length === 0) colors.push('#1E90FF'); // DodgerBlue (softer blue like logo)
                 if (colors.length === 1) colors.push('#FFFFFF'); // White
-                if (colors.length === 2) colors.push('#FF0000'); // Red
+                if (colors.length === 2) colors.push('#FF4500'); // OrangeRed (closer to logo’s red accent)
             }
 
             // Shuffle base colors for variety
@@ -135,7 +135,7 @@
 
             // Create diverse vertical stripes (10 total: 5 on each side, mirrored, with varied widths)
             const totalStripes = 10; // 5 on each side, mirrored
-            const stripeWidths = [15, 30, 20, 25, 10]; // Diverse widths (thin, thick, medium), total 100px per side
+            const stripeWidths = [25, 20, 15, 30, 10]; // Diverse widths (medium, medium, thin, thick, thin), total 100px per side
             let currentX = 0;
             const canvasWidth = canvas.width; // Use exact width for precision
 
