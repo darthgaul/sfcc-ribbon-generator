@@ -100,7 +100,7 @@
             }
         });
 
-        // Generate ribbon with colors directly from the logo, centered and mirrored diverse stripes, and horizontal lines
+        // Generate ribbon with colors directly from the logo, centered and perfectly mirrored diverse stripes, and horizontal lines
         function generateRibbon() {
             if (!uploadedImage) return;
 
@@ -126,8 +126,8 @@
             // Create diverse vertical stripes (10 total: 5 on each side, mirrored, with varied widths, centered)
             const totalStripes = 10; // 5 on each side, mirrored
             const stripeWidths = [30, 25, 20, 15, 10]; // Diverse widths (thick to thin), total 100px per side
-            const totalWidth = stripeWidths.reduce((sum, width) => sum + width, 0); // Sum of widths (100px per side, 200px total)
-            const leftOffset = (canvas.width - totalWidth * 2) / 2; // Center the pattern by offsetting from the left
+            const totalWidth = stripeWidths.reduce((sum, width) => sum + width, 0) * 2; // Total width for both sides (200px)
+            const leftOffset = (canvas.width - totalWidth) / 2; // Center the pattern by offsetting from the left
 
             let currentX = leftOffset; // Start from the centered position
             const canvasWidth = canvas.width;
@@ -140,12 +140,12 @@
                 currentX += width;
             }
 
-            // Mirror the left side to the right (starting from the right edge, moving left)
+            // Mirror the left side to the right (using the same widths in reverse, starting from the right edge)
             currentX = canvasWidth - leftOffset; // Start from the right edge minus offset
             for (let i = stripeWidths.length - 1; i >= 0; i--) {
-                const width = stripeWidths[i];
+                const width = stripeWidths[i]; // Use the same width as the left side
                 ctx.fillStyle = colors[(stripeWidths.length - 1 - i) % colors.length];
-                ctx.fillRect(currentX - width, 0, width, canvas.height); // Solid main color, mirrored
+                ctx.fillRect(currentX - width, 0, width, canvas.height); // Solid main color, mirrored with same widths
                 currentX -= width;
             }
 
