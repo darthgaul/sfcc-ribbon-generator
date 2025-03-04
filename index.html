@@ -18,9 +18,12 @@
             background-color: #2e3b4e;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
-        #upload-btn, #generate-btn, #regenerate-btn, #go-back-btn, #download-btn {
+        #canvas {
+            border: 2px solid #ffffff;
+            margin-top: 20px;
+        }
+        button {
             background-color: #4a90e2;
             color: white;
             border: none;
@@ -29,19 +32,12 @@
             cursor: pointer;
             border-radius: 5px;
         }
-        #upload-btn:hover, #generate-btn:hover, #regenerate-btn:hover, #go-back-btn:hover, #download-btn:hover {
+        button:hover {
             background-color: #357abd;
-        }
-        #canvas {
-            border: 2px solid #ffffff;
-            margin-top: 20px;
         }
         #logo-preview {
             max-width: 100px;
             margin: 10px 0;
-        }
-        .button-group {
-            margin-top: 10px;
         }
     </style>
 </head>
@@ -54,7 +50,7 @@
         <button id="upload-btn">Upload Logo</button>
         <img id="logo-preview" src="" alt="" style="display: none;">
         
-        <div class="button-group">
+        <div>
             <button id="generate-btn" disabled>Generate Ribbon</button>
             <button id="regenerate-btn" disabled>Regenerate</button>
             <button id="go-back-btn" disabled>Go Back</button>
@@ -76,12 +72,10 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         let uploadedImage = null;
-        let previousRibbons = []; // Store previous ribbon states
+        let previousRibbons = [];
 
-        // Trigger file input click
         uploadBtn.addEventListener('click', () => logoUpload.click());
 
-        // Handle logo upload
         logoUpload.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
@@ -92,7 +86,7 @@
                         logoPreview.src = event.target.result;
                         logoPreview.style.display = 'block';
                         generateBtn.disabled = false;
-                        previousRibbons = []; // Reset previous ribbons on new upload
+                        previousRibbons = [];
                     };
                     uploadedImage.src = event.target.result;
                 };
@@ -100,123 +94,76 @@
             }
         });
 
-        // Calculate color distance for spacing out similar colors
-        function colorDistance(color1, color2) {
-            const [r1, g1, b1] = color1.match(/\d+/g).map(Number);
-            const [r2, g2, b2] = color2.match(/\d+/g).map(Number);
-            return Math.sqrt(
-                Math.pow(r2 - r1, 2) +
-                Math.pow(g2 - g1, 2) +
-                Math.pow(b2 - b1, 2)
-            );
-        }
-
-        // Generate ribbon with colors directly from the logo, centered and perfectly mirrored diverse stripes, and horizontal lines
         function generateRibbon() {
             if (!uploadedImage) return;
 
-            // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Extract dominant colors directly from the logo using ColorThief
+            // Extract colors from the logo
             const colorThief = new ColorThief();
-            const palette = colorThief.getPalette(uploadedImage, 5, 20); // Higher quality and more samples for dark logos and gradients
+            const palette = colorThief.getPalette(uploadedImage, 5);
             let colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+            colors = shuffleArray(colors);
 
-            // Filter and space out colors to avoid similar hues, prioritizing dark colors for dark logos
-            colors = colors.filter(color => {
-                const [r, g, b] = color.match(/\d+/g).map(Number);
-                // Allow dark colors (low R, G, B) and bright colors, but prioritize logo relevance
-                const brightness = (r + g + b) / 3;
-                const isDark = brightness < 128; // Consider colors dark if average brightness is below 128
-                const isBright = brightness > 200; // Consider colors bright if above 200
-                return isDark || isBright; // Include dark and bright colors, capturing dark logos
+            // Ribbon specs
+            const ribbonWidth = canvas.width; // 300px
+            const halfWidth = ribbonWidth / 2; // 150px
+
+            // Random number of bars on the left (3 to 6)
+            const numBars = Math.floor(Math.random() * 4) + 3; // 3 to 6 bars per side
+            let leftWidths = generateRandomWidths(numBars, halfWidth);
+            let leftColors = colors.slice(0, numBars);
+
+            // Mirror for the right side
+            const rightWidths = leftWidths.slice().reverse();
+            const rightColors = leftColors.slice().reverse();
+
+            // Combine all bars
+            const allWidths = [...leftWidths, ...rightWidths];
+            const allColors = [...leftColors, ...rightColors];
+
+            // Draw the ribbon
+            let currentX = 0;
+            allWidths.forEach((width, index) => {
+                ctx.fillStyle = allColors[index % allColors.length];
+                ctx.fillRect(currentX, 0, width, canvas.height);
+                currentX += width;
             });
 
-            // Remove similar colors (minimum distance of 100 for distinctness)
-            const uniqueColors = [];
-            for (let i = 0; i < colors.length; i++) {
-                let isUnique = true;
-                for (let j = 0; j < uniqueColors.length; j++) {
-                    if (colorDistance(colors[i], uniqueColors[j]) < 100) {
-                        isUnique = false;
-                        break;
-                    }
-                }
-                if (isUnique) uniqueColors.push(colors[i]);
-            }
-            colors = uniqueColors;
-
-            // Ensure at least 3 distinct colors, using raw palette or random dark/bright fallbacks
-            while (colors.length < 3) {
-                if (colors.length === 0) colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`); // Use raw palette
-                if (colors.length < 3) {
-                    const brightness = Math.random() < 0.5 ? Math.floor(Math.random() * 128) : 200 + Math.floor(Math.random() * 56); // Dark or bright
-                    colors.push(`rgb(${brightness}, ${brightness}, ${brightness})`); // Neutral dark or bright fallback
-                }
-            }
-
-            // Limit to 3 colors for consistency, shuffle for variety
-            colors = shuffleArray(colors.slice(0, 3));
-
-            // Define stripe configuration as a fixed, symmetrical grid (5 stripes per side, mirrored)
-            const stripeConfig = [
-                { width: 30, colorIndex: 0 }, // Thick stripe
-                { width: 25, colorIndex: 1 }, // Medium stripe
-                { width: 20, colorIndex: 2 }, // Medium-thin stripe
-                { width: 15, colorIndex: 0 }, // Thin stripe
-                { width: 10, colorIndex: 1 }  // Very thin stripe
-            ];
-            const totalWidthPerSide = stripeConfig.reduce((sum, stripe) => sum + stripe.width, 0); // 100px per side
-            const center = canvas.width / 2; // Center point of the canvas (150px)
-
-            // Draw stripes simultaneously from center outward, ensuring perfect mirroring and no gaps
-            let leftX = center - totalWidthPerSide; // Start left of center
-            let rightX = center; // Start at center for right side
-
-            // Draw left side (moving leftward)
-            stripeConfig.forEach((stripe, index) => {
-                ctx.fillStyle = colors[stripe.colorIndex % colors.length];
-                ctx.fillRect(leftX, 0, stripe.width, canvas.height); // Solid main color
-                leftX += stripe.width; // Move toward center
-            });
-
-            // Draw right side (moving rightward, mirrored)
-            stripeConfig.slice().reverse().forEach((stripe, index) => {
-                ctx.fillStyle = colors[(stripeConfig.length - 1 - index) % colors.length];
-                ctx.fillRect(rightX, 0, stripe.width, canvas.height); // Solid main color, mirrored
-                rightX += stripe.width; // Move away from center
-            });
-
-            // Ensure no gaps on sides by filling any remaining space with the first color
-            if (leftX < 0) {
-                ctx.fillStyle = colors[0];
-                ctx.fillRect(0, 0, -leftX, canvas.height); // Fill left gap
-            }
-            if (rightX > canvas.width) {
-                ctx.fillStyle = colors[0];
-                ctx.fillRect(canvas.width - (rightX - canvas.width), 0, rightX - canvas.width, canvas.height); // Fill right gap
-            }
-
-            // Add evenly distributed, transparent horizontal lines (15 lines, 75% transparent)
-            const lineSpacing = canvas.height / 16; // 15 spaces for 16 lines (top and bottom included)
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)'; // 25% opacity (75% transparent)
+            // Add horizontal lines for texture
+            const lineSpacing = canvas.height / 16;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
             ctx.lineWidth = 1;
-            for (let i = 1; i < 16; i++) { // Skip top and bottom for cleaner look, create 15 lines
+            for (let i = 1; i < 16; i++) {
                 ctx.beginPath();
                 ctx.moveTo(0, i * lineSpacing);
                 ctx.lineTo(canvas.width, i * lineSpacing);
                 ctx.stroke();
-            }
+            });
 
-            // Save current state
+            // Save state
             previousRibbons.push(canvas.toDataURL());
             regenerateBtn.disabled = false;
             goBackBtn.disabled = previousRibbons.length <= 1;
             downloadBtn.disabled = false;
         }
 
-        // Shuffle array function for randomizing colors
+        function generateRandomWidths(numBars, targetSum) {
+            // Generate initial random widths
+            let widths = Array(numBars).fill(0).map(() => Math.random() * 40 + 10); // 10 to 50px range
+            const currentSum = widths.reduce((sum, w) => sum + w, 0);
+            
+            // Scale to exactly match targetSum (halfWidth)
+            const scale = targetSum / currentSum;
+            widths = widths.map(w => Math.round(w * scale));
+            
+            // Fine-tune the last width to ensure exact sum
+            const adjustedSum = widths.slice(0, -1).reduce((sum, w) => sum + w, 0);
+            widths[numBars - 1] = targetSum - adjustedSum;
+            
+            return widths;
+        }
+
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -225,18 +172,11 @@
             return array;
         }
 
-        // Generate ribbon button
-        generateBtn.addEventListener('click', () => generateRibbon());
-
-        // Regenerate with new colors
-        regenerateBtn.addEventListener('click', () => {
-            generateRibbon(); // Generate a new ribbon with shuffled colors
-        });
-
-        // Go back to previous ribbon
+        generateBtn.addEventListener('click', generateRibbon);
+        regenerateBtn.addEventListener('click', generateRibbon);
         goBackBtn.addEventListener('click', () => {
             if (previousRibbons.length > 1) {
-                previousRibbons.pop(); // Remove current
+                previousRibbons.pop();
                 const previousData = previousRibbons[previousRibbons.length - 1];
                 const img = new Image();
                 img.onload = () => {
@@ -245,11 +185,8 @@
                 };
                 img.src = previousData;
                 goBackBtn.disabled = previousRibbons.length <= 1;
-                downloadBtn.disabled = false;
             }
         });
-
-        // Download ribbon
         downloadBtn.addEventListener('click', () => {
             const link = document.createElement('a');
             link.download = 'sfcc-sponsorship-ribbon.png';
