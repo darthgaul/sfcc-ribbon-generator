@@ -112,7 +112,7 @@
             const palette = colorThief.getPalette(uploadedImage, 5, 10); // Higher quality for more accurate colors
             let colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`);
 
-            // Use raw colors directly, no filtering, but validate for logo-like colors (blue, white, red ranges with tolerance)
+            // Use raw colors directly, but validate for logo-like colors (blue, white, red ranges with tolerance)
             colors = colors.filter(color => {
                 const [r, g, b] = color.match(/\d+/g).map(Number);
                 const isBlue = b > 50 && (r < b * 1.5) && (g < b * 1.5); // More lenient blue (deep or light blue)
@@ -130,30 +130,34 @@
             // Limit to 3 colors for consistency, shuffle for variety
             colors = shuffleArray(colors.slice(0, 3));
 
-            // Create diverse vertical stripes (10 total: 5 on each side, perfectly mirrored, with varied widths, centered)
+            // Create diverse vertical stripes (10 total: 5 on each side, perfectly mirrored, with varied widths, centered from the middle)
             const totalStripes = 10; // 5 on each side, mirrored
             const stripeWidths = [30, 25, 20, 15, 10]; // Diverse widths (thick to thin), total 100px per side
-            const totalWidth = stripeWidths.reduce((sum, width) => sum + width, 0) * 2; // Total width for both sides (200px)
             const center = canvas.width / 2; // Center point of the canvas (150px)
+            const halfWidthSum = stripeWidths.reduce((sum, width) => sum + width, 0); // Total width per side (100px)
 
-            // Draw stripes from center outward, ensuring perfect mirroring
-            let leftX = center - stripeWidths.reduce((sum, width) => sum + width, 0); // Left start position
-            let rightX = center; // Right start position
-
-            // Left side (mirrored to right)
+            // Draw left side from center outward (leftward)
+            let leftX = center - halfWidthSum; // Start left of center
             for (let i = 0; i < stripeWidths.length; i++) {
                 const width = stripeWidths[i];
                 ctx.fillStyle = colors[i % colors.length];
                 ctx.fillRect(leftX, 0, width, canvas.height); // Solid main color
-                leftX += width;
+                leftX += width; // Move rightward toward center
             }
 
-            // Right side (mirrored from left, starting from center)
+            // Draw right side from center outward (rightward)
+            let rightX = center; // Start at center
             for (let i = stripeWidths.length - 1; i >= 0; i--) {
-                const width = stripeWidths[i];
+                const width = stripeWidths[i]; // Use the same widths in reverse
                 ctx.fillStyle = colors[(stripeWidths.length - 1 - i) % colors.length];
                 ctx.fillRect(rightX, 0, width, canvas.height); // Solid main color, mirrored
-                rightX += width;
+                rightX += width; // Move rightward
+            }
+
+            // Verify total width covers the canvas (should be 300px exactly)
+            if (leftX < 0 || rightX > canvas.width) {
+                console.warn('Stripe width calculation issue:', leftX, rightX);
+                // Adjust if necessary, but current math should be exact
             }
 
             // Add evenly distributed, transparent horizontal lines (15 lines, 75% transparent)
