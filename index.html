@@ -44,8 +44,16 @@
             border: 1px solid #ffffff;
         }
         #logo-preview {
-            max-width: 60px;
-            margin: 3px 0;
+            max-width: 100%; /* Full width, but constrained */
+            max-height: 100px; /* Limit height to prevent stretching */
+            margin: 3px auto; /* Center and minimal margin */
+            object-fit: contain; /* Maintain aspect ratio, no stretching */
+        }
+        #download-instructions {
+            display: none; /* Hidden by default */
+            margin-top: 5px; /* Space below ribbon */
+            font-size: 12px;
+            color: #ffffff;
         }
         .button-group {
             margin-top: 3px;
@@ -69,7 +77,11 @@
                 min-width: 60px;
             }
             #logo-preview {
-                max-width: 40px;
+                max-width: 80%; /* Slightly smaller on mobile */
+                max-height: 80px; /* Smaller height on mobile */
+            }
+            #download-instructions {
+                font-size: 10px; /* Smaller font on mobile */
             }
         }
     </style>
@@ -90,6 +102,7 @@
         </div>
         
         <canvas id="canvas" width="300" height="100"></canvas>
+        <p id="download-instructions">If download doesn’t work, right-click the ribbon and save image as...</p>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
@@ -104,6 +117,7 @@
         const downloadBtn = document.getElementById('download-btn');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        const downloadInstructions = document.getElementById('download-instructions');
         let uploadedImage = null;
         let previousRibbons = [];
 
@@ -115,6 +129,7 @@
         if (!goBackBtn) console.error('Go back button not found');
         if (!downloadBtn) console.error('Download button not found');
         if (!canvas) console.error('Canvas not found');
+        if (!downloadInstructions) console.error('Download instructions not found');
 
         // Upload button triggers file input
         uploadBtn.addEventListener('click', () => {
@@ -268,6 +283,9 @@
                 ctx.stroke();
             }
 
+            // Show download instructions
+            downloadInstructions.style.display = 'block';
+
             // Save state
             previousRibbons.push(canvas.toDataURL());
             generateBtn.disabled = false; // "Generate Ribbon" now handles regeneration
@@ -313,13 +331,7 @@
         downloadBtn.addEventListener('click', () => {
             console.log('Download button clicked');
             const dataUrl = canvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            link.download = 'sfcc-sponsorship-ribbon.png';
-            link.href = dataUrl;
-            link.target = '_blank'; // Open in new tab/window
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link); // Clean up
+            window.open(dataUrl, '_blank'); // Open in new tab for manual download
         });
 
         console.log('Script ended');
