@@ -84,6 +84,20 @@
                 font-size: 10px; /* Smaller font on mobile */
             }
         }
+        /* Optional scrollbar styling for mobile */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #2e3b4e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4a90e2;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #357abd;
+        }
     </style>
 </head>
 <body>
@@ -331,8 +345,30 @@
         downloadBtn.addEventListener('click', () => {
             console.log('Download button clicked');
             const dataUrl = canvas.toDataURL('image/png');
-            window.open(dataUrl, '_blank'); // Open in new tab for manual download
+            const blob = dataURLtoBlob(dataUrl); // Convert data URL to Blob
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = 'sfcc-sponsorship-ribbon.png';
+            link.href = url;
+            link.target = '_blank'; // Open in new tab/window
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link); // Clean up
+            window.URL.revokeObjectURL(url); // Clean up URL object
         });
+
+        // Helper function to convert data URL to Blob
+        function dataURLtoBlob(dataUrl) {
+            const arr = dataUrl.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new Blob([u8arr], { type: mime });
+        }
 
         console.log('Script ended');
     </script>
