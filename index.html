@@ -15,7 +15,7 @@
             overflow: hidden; /* Prevent scrolling within iframe if not needed */
         }
         #container {
-            max-width: 630px; /* Match Qgiv width for consistency, scales to 100% of parent */
+            max-width: 500px; /* Reduced from 630px for better PC fit, still mobile-friendly */
             margin: 0 auto;
             background-color: #2e3b4e;
             padding: 5px; /* Minimal padding */
@@ -120,17 +120,19 @@
         if (!downloadBtn) console.error('Download button not found');
         if (!canvas) console.error('Canvas not found');
 
-        // Upload button triggers file input
+        // Upload button triggers file input, with reset to prevent reopens
         uploadBtn.addEventListener('click', () => {
             console.log('Upload button clicked');
+            logoUpload.value = ''; // Reset the file input to prevent re-triggering
             logoUpload.click();
         });
 
-        // Handle file selection
+        // Handle file selection, ensuring single open/close behavior
         logoUpload.addEventListener('change', (e) => {
-            console.log('File selected');
+            console.log('File dialog closed or file selected');
             const file = e.target.files[0];
             if (file) {
+                console.log('File selected:', file.name);
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     uploadedImage = new Image();
@@ -143,6 +145,9 @@
                     uploadedImage.src = event.target.result;
                 };
                 reader.readAsDataURL(file);
+            } else {
+                console.log('File selection canceled');
+                logoUpload.value = ''; // Reset on cancel to prevent re-triggering
             }
         });
 
@@ -295,30 +300,6 @@
         }
 
         // Event listeners for buttons
-        uploadBtn.addEventListener('click', () => {
-            console.log('Upload button clicked');
-            logoUpload.click();
-        });
-
-        logoUpload.addEventListener('change', (e) => {
-            console.log('File selected');
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    uploadedImage = new Image();
-                    uploadedImage.onload = () => {
-                        logoPreview.src = event.target.result;
-                        logoPreview.style.display = 'block';
-                        generateBtn.disabled = false;
-                        previousRibbons = [];
-                    };
-                    uploadedImage.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
         generateBtn.addEventListener('click', generateRibbon);
         goBackBtn.addEventListener('click', () => {
             if (previousRibbons.length > 1) {
