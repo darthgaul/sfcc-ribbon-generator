@@ -100,7 +100,7 @@
             }
         });
 
-        // Generate ribbon with diversified colors and many stripes
+        // Generate ribbon with diversified colors, mirrored stripes, and horizontal lines
         function generateRibbon() {
             if (!uploadedImage) return;
 
@@ -120,66 +120,39 @@
             // Shuffle colors for variety
             colors = shuffleArray(colors);
 
-            // Create many vertical stripes (7 total: 3 thin, 4 thick, symmetrical around center)
-            const totalStripes = 7;
-            const stripeWidths = [20, 40, 20, 40, 20, 40, 20]; // Thin (20px), thick (40px), mirrored
+            // Create many vertical stripes (8 total: 4 thin, 4 thick, mirrored around center)
+            const totalStripes = 8; // 4 on each side, mirrored
+            const stripeWidths = [15, 30, 15, 30]; // Thin (15px), thick (30px)
             let currentX = 0;
+            const halfWidth = canvas.width / 2;
 
-            for (let i = 0; i < totalStripes / 2; i++) {
-                const leftWidth = stripeWidths[i];
-                const rightWidth = stripeWidths[totalStripes - 1 - i]; // Mirror right side
-
-                // Left stripe
+            // Left side (mirrored to right)
+            for (let i = 0; i < stripeWidths.length; i++) {
+                const width = stripeWidths[i];
                 ctx.fillStyle = colors[i % colors.length];
-                ctx.fillRect(currentX, 0, leftWidth, canvas.height);
-
-                // Add texture (diagonal lines for a striped effect)
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-                ctx.lineWidth = 1;
-                for (let y = -canvas.height; y < canvas.width; y += 20) {
-                    ctx.beginPath();
-                    ctx.moveTo(currentX + y, 0);
-                    ctx.lineTo(currentX + y + canvas.height, canvas.height);
-                    ctx.stroke();
-                }
-
-                currentX += leftWidth;
-
-                // Right stripe (mirrored)
-                ctx.fillStyle = colors[(i + 1) % colors.length]; // Use next color for variety
-                ctx.fillRect(canvas.width - currentX, 0, rightWidth, canvas.height);
-
-                // Add texture to right stripe
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-                ctx.lineWidth = 1;
-                for (let y = -canvas.height; y < canvas.width; y += 20) {
-                    ctx.beginPath();
-                    ctx.moveTo(canvas.width - currentX + y, 0);
-                    ctx.lineTo(canvas.width - currentX + y + canvas.height, canvas.height);
-                    ctx.stroke();
-                }
+                ctx.fillRect(currentX, 0, width, canvas.height); // Solid color, no texture
+                currentX += width;
             }
 
-            // Center stripe (thick, different color)
-            const centerWidth = 40;
-            ctx.fillStyle = colors[colors.length - 1]; // Use last color for center
-            ctx.fillRect((canvas.width - centerWidth) / 2, 0, centerWidth, canvas.height);
+            // Mirror the left side to the right (using percentages for precision)
+            currentX = 0; // Reset for right side
+            for (let i = stripeWidths.length - 1; i >= 0; i--) {
+                const width = stripeWidths[i];
+                ctx.fillStyle = colors[(stripeWidths.length - 1 - i) % colors.length];
+                ctx.fillRect(canvas.width - currentX - width, 0, width, canvas.height); // Solid color
+                currentX += width;
+            }
 
-            // Add texture to center stripe
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            // Add evenly distributed horizontal lines (5 lines, spaced evenly)
+            const lineSpacing = canvas.height / 6; // 5 spaces for 6 lines (top and bottom included)
+            ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 1;
-            for (let y = -canvas.height; y < canvas.width; y += 20) {
+            for (let i = 1; i < 6; i++) { // Skip top and bottom for cleaner look
                 ctx.beginPath();
-                ctx.moveTo((canvas.width - centerWidth) / 2 + y, 0);
-                ctx.lineTo((canvas.width - centerWidth) / 2 + y + canvas.height, canvas.height);
+                ctx.moveTo(0, i * lineSpacing);
+                ctx.lineTo(canvas.width, i * lineSpacing);
                 ctx.stroke();
             }
-
-            // Add sponsor number or text (gold, centered)
-            ctx.fillStyle = '#FFD700'; // Gold color for text
-            ctx.font = 'bold 40px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('1', canvas.width / 2, canvas.height / 2 + 15);
 
             // Save current state
             previousRibbons.push(canvas.toDataURL());
