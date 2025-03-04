@@ -133,27 +133,26 @@
             // Shuffle base colors for variety
             colors = shuffleArray(colors);
 
-            // Create diverse vertical stripes (10 total: 5 on each side, mirrored, with varied widths)
+            // Create diverse vertical stripes (10 total: 5 on each side, mirrored, with varied widths, filling the entire canvas)
             const totalStripes = 10; // 5 on each side, mirrored
-            const stripeWidths = [25, 20, 15, 30, 10]; // Diverse widths (medium, medium, thin, thick, thin), total 100px per side
+            const stripeWidths = [30, 25, 20, 15, 10]; // Diverse widths (thick to thin), total 100px per side
             let currentX = 0;
             const canvasWidth = canvas.width; // Use exact width for precision
 
-            // Left side (mirrored to right)
-            for (let i = 0; i < stripeWidths.length; i++) {
-                const width = stripeWidths[i];
-                ctx.fillStyle = colors[i % colors.length];
+            // Draw all stripes from left to right, ensuring full coverage
+            for (let i = 0; i < totalStripes; i++) {
+                const width = stripeWidths[i % stripeWidths.length]; // Cycle through widths
+                const colorIndex = i < stripeWidths.length ? i : (totalStripes - 1 - i) % colors.length; // Mirror colors
+                ctx.fillStyle = colors[colorIndex % colors.length];
                 ctx.fillRect(currentX, 0, width, canvas.height); // Solid main color
                 currentX += width;
             }
 
-            // Mirror the left side to the right (using precise math for symmetry)
-            currentX = 0; // Reset for right side
-            for (let i = stripeWidths.length - 1; i >= 0; i--) {
-                const width = stripeWidths[i];
-                ctx.fillStyle = colors[(stripeWidths.length - 1 - i) % colors.length];
-                ctx.fillRect(canvasWidth - currentX - width, 0, width, canvas.height); // Solid main color, mirrored
-                currentX += width;
+            // Ensure the total width matches the canvas width (adjust if necessary to avoid gaps)
+            if (currentX < canvasWidth) {
+                const remainingWidth = canvasWidth - currentX;
+                ctx.fillStyle = colors[0]; // Use first color to fill any remaining space
+                ctx.fillRect(currentX, 0, remainingWidth, canvas.height);
             }
 
             // Add evenly distributed, transparent horizontal lines (15 lines, 75% transparent)
