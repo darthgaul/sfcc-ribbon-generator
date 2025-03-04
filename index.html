@@ -100,74 +100,60 @@
             }
         });
 
-        // Generate ribbon with logo-based colors (blue, white, red), centered and perfectly mirrored diverse stripes, and horizontal lines
+        // Generate ribbon with colors directly from the logo, centered and perfectly mirrored diverse stripes, and horizontal lines
         function generateRibbon() {
             if (!uploadedImage) return;
 
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Extract dominant colors from the logo using ColorThief
+            // Extract dominant colors directly from the logo using ColorThief
             const colorThief = new ColorThief();
-            const palette = colorThief.getPalette(uploadedImage, 5); // Get up to 5 dominant colors
+            const palette = colorThief.getPalette(uploadedImage, 5, 10); // Higher quality for more accurate colors
             let colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`);
 
-            // Filter to only blue, white, and red (strict ranges to match logo colors, no purple or gradients)
+            // Use raw colors directly, no filtering, but validate for logo-like colors (blue, white, red ranges with tolerance)
             colors = colors.filter(color => {
                 const [r, g, b] = color.match(/\d+/g).map(Number);
-                // Blue: High blue, moderate red/green (B > 100, R < 150, G < 150)
-                // White: High R, G, B (> 200)
-                // Red: High red, low blue/green (R > 100, B < 100, G < 100)
-                return (b > 100 && r < 150 && g < 150) || // Blue (deep blue like logo)
-                       (r > 200 && g > 200 && b > 200) || // White
-                       (r > 100 && b < 100 && g < 100); // Red (bright red for accents)
+                const isBlue = b > 50 && (r < b * 1.5) && (g < b * 1.5); // More lenient blue (deep or light blue)
+                const isWhite = r > 200 && g > 200 && b > 200; // White
+                const isRed = r > 50 && (b < r * 0.5) && (g < r * 0.5); // More lenient red (bright or muted red)
+                return isBlue || isWhite || isRed;
             });
 
-            // Ensure we have at least 3 colors, defaulting to logo-like blue, white, red if fewer
+            // If fewer than 3 colors, use raw palette or add neutral fallbacks
             while (colors.length < 3) {
-                if (colors.length === 0) colors.push('#00008B'); // DarkBlue (deep blue like logo)
-                if (colors.length === 1) colors.push('#FFFFFF'); // White
-                if (colors.length === 2) colors.push('#FF0000'); // Red
+                if (colors.length === 0) colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`); // Use raw palette
+                if (colors.length < 3) colors.push(`rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`); // Random neutral if needed
             }
 
-            // Shuffle base colors for variety
-            colors = shuffleArray(colors);
+            // Limit to 3 colors for consistency, shuffle for variety
+            colors = shuffleArray(colors.slice(0, 3));
 
             // Create diverse vertical stripes (10 total: 5 on each side, perfectly mirrored, with varied widths, centered)
             const totalStripes = 10; // 5 on each side, mirrored
             const stripeWidths = [30, 25, 20, 15, 10]; // Diverse widths (thick to thin), total 100px per side
             const totalWidth = stripeWidths.reduce((sum, width) => sum + width, 0) * 2; // Total width for both sides (200px)
-            const leftOffset = (canvas.width - totalWidth) / 2; // Center the pattern by offsetting from the left
+            const center = canvas.width / 2; // Center point of the canvas (150px)
 
-            let currentX = leftOffset; // Start from the centered position
-            const canvasWidth = canvas.width;
+            // Draw stripes from center outward, ensuring perfect mirroring
+            let leftX = center - stripeWidths.reduce((sum, width) => sum + width, 0); // Left start position
+            let rightX = center; // Right start position
 
             // Left side (mirrored to right)
             for (let i = 0; i < stripeWidths.length; i++) {
                 const width = stripeWidths[i];
                 ctx.fillStyle = colors[i % colors.length];
-                ctx.fillRect(currentX, 0, width, canvas.height); // Solid main color, no gradients
-                currentX += width;
+                ctx.fillRect(leftX, 0, width, canvas.height); // Solid main color
+                leftX += width;
             }
 
-            // Mirror the left side to the right (using the same widths in reverse, starting from the right edge)
-            currentX = canvasWidth - leftOffset; // Start from the right edge minus offset
+            // Right side (mirrored from left, starting from center)
             for (let i = stripeWidths.length - 1; i >= 0; i--) {
-                const width = stripeWidths[i]; // Use the exact same width as the left side for perfect mirroring
+                const width = stripeWidths[i];
                 ctx.fillStyle = colors[(stripeWidths.length - 1 - i) % colors.length];
-                ctx.fillRect(currentX - width, 0, width, canvas.height); // Solid main color, mirrored with same widths
-                currentX -= width;
-            }
-
-            // Ensure the total width matches the canvas width (adjust if necessary to avoid gaps)
-            if (currentX < leftOffset) {
-                const remainingWidth = leftOffset - currentX;
-                ctx.fillStyle = colors[0]; // Use first color to fill any remaining space on the left
-                ctx.fillRect(0, 0, remainingWidth, canvas.height);
-            } else if (currentX > canvasWidth - leftOffset) {
-                const remainingWidth = currentX - (canvasWidth - leftOffset);
-                ctx.fillStyle = colors[0]; // Use first color to fill any remaining space on the right
-                ctx.fillRect(canvasWidth - remainingWidth, 0, remainingWidth, canvas.height);
+                ctx.fillRect(rightX, 0, width, canvas.height); // Solid main color, mirrored
+                rightX += width;
             }
 
             // Add evenly distributed, transparent horizontal lines (15 lines, 75% transparent)
@@ -177,7 +163,7 @@
             for (let i = 1; i < 16; i++) { // Skip top and bottom for cleaner look, create 15 lines
                 ctx.beginPath();
                 ctx.moveTo(0, i * lineSpacing);
-                ctx.lineTo(canvasWidth, i * lineSpacing);
+                ctx.lineTo(canvas.width, i * lineSpacing);
                 ctx.stroke();
             }
 
