@@ -122,7 +122,7 @@
 
             // Create many vertical stripes (8 total: 4 thin, 4 thick, mirrored around center)
             const totalStripes = 8; // 4 on each side, mirrored
-            const stripeWidths = [15, 30, 15, 30]; // Thin (15px), thick (30px)
+            const stripeWidths = [25, 25, 25, 25]; // Even widths for simplicity (25px each for symmetry)
             let currentX = 0;
             const halfWidth = canvas.width / 2;
 
@@ -134,7 +134,7 @@
                 currentX += width;
             }
 
-            // Mirror the left side to the right (using percentages for precision)
+            // Mirror the left side to the right (using pixels for precision)
             currentX = 0; // Reset for right side
             for (let i = stripeWidths.length - 1; i >= 0; i--) {
                 const width = stripeWidths[i];
@@ -143,11 +143,11 @@
                 currentX += width;
             }
 
-            // Add evenly distributed horizontal lines (5 lines, spaced evenly)
-            const lineSpacing = canvas.height / 6; // 5 spaces for 6 lines (top and bottom included)
-            ctx.strokeStyle = '#ffffff';
+            // Add evenly distributed, transparent horizontal lines (15 lines)
+            const lineSpacing = canvas.height / 16; // 15 spaces for 16 lines (top and bottom included)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.33)'; // 33% opacity (50% more transparent than 100%)
             ctx.lineWidth = 1;
-            for (let i = 1; i < 6; i++) { // Skip top and bottom for cleaner look
+            for (let i = 1; i < 16; i++) { // Skip top and bottom for cleaner look, create 15 lines
                 ctx.beginPath();
                 ctx.moveTo(0, i * lineSpacing);
                 ctx.lineTo(canvas.width, i * lineSpacing);
