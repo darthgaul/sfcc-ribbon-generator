@@ -10,49 +10,71 @@
             background-color: #1a2b3c;
             color: #ffffff;
             text-align: center;
-            padding: 10px; /* Reduced padding for iframe compatibility */
+            padding: 5px; /* Minimal padding for iframes */
             margin: 0; /* Remove default margins */
+            overflow: hidden; /* Prevent scrolling within iframe if not needed */
         }
         #container {
-            max-width: 400px; /* Narrower container for iframes */
+            max-width: 630px; /* Match Qgiv width for consistency, scales to 100% of parent */
             margin: 0 auto;
             background-color: #2e3b4e;
-            padding: 10px; /* Reduced padding */
-            border-radius: 5px; /* Smaller border radius */
-            box-shadow: 0 0 5px rgba(0,0,0,0.5); /* Lighter shadow */
+            padding: 5px; /* Minimal padding */
+            border-radius: 3px; /* Smaller radius for mobile */
+            box-shadow: 0 0 3px rgba(0,0,0,0.5); /* Lighter shadow */
         }
         #upload-btn, #generate-btn, #go-back-btn, #download-btn {
             background-color: #4a90e2;
             color: white;
             border: none;
-            padding: 8px 16px; /* Smaller button padding for compactness */
-            margin: 3px; /* Reduced margin */
+            padding: 6px 12px; /* Smaller for mobile */
+            margin: 2px; /* Minimal margin */
             cursor: pointer;
-            border-radius: 3px; /* Smaller border radius */
-            font-size: 14px; /* Smaller font size */
+            border-radius: 2px; /* Smaller radius */
+            font-size: 12px; /* Smaller font for mobile */
+            width: auto; /* Allow buttons to shrink */
+            min-width: 80px; /* Minimum width for readability */
         }
         #upload-btn:hover, #generate-btn:hover, #go-back-btn:hover, #download-btn:hover {
             background-color: #357abd;
         }
         #canvas {
             border: 1px solid #ffffff; /* Thinner border */
-            margin-top: 10px; /* Reduced margin */
-            width: 100%; /* Ensure canvas fits container */
+            margin-top: 5px; /* Minimal margin */
+            width: 100%; /* Full width for responsiveness */
             height: auto; /* Maintain aspect ratio */
+            max-height: 100px; /* Limit height to match original canvas */
         }
         #logo-preview {
-            max-width: 80px; /* Smaller preview for iframes */
-            margin: 5px 0; /* Reduced margin */
+            max-width: 60px; /* Smaller for mobile */
+            margin: 3px 0; /* Minimal margin */
         }
         .button-group {
-            margin-top: 5px; /* Reduced margin */
-            display: flex; /* Use flexbox for compact button layout */
+            margin-top: 3px; /* Minimal margin */
+            display: flex; /* Flexbox for mobile layout */
             justify-content: center; /* Center buttons */
-            flex-wrap: wrap; /* Allow wrapping for small screens */
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+            gap: 4px; /* Small gap between buttons */
         }
         button:disabled {
             background-color: #5a7ea5; /* Lighter disabled state */
             cursor: not-allowed;
+        }
+        @media (max-width: 480px) { /* Mobile-specific adjustments */
+            #container {
+                max-width: 100%; /* Full width on mobile */
+                padding: 3px; /* Even smaller padding */
+            }
+            #upload-btn, #generate-btn, #go-back-btn, #download-btn {
+                padding: 4px 8px; /* Smaller buttons on mobile */
+                font-size: 10px; /* Smaller font */
+                min-width: 60px; /* Smaller minimum width */
+            }
+            #logo-preview {
+                max-width: 40px; /* Even smaller preview on mobile */
+            }
+            #canvas {
+                max-height: 80px; /* Slightly smaller canvas on mobile */
+            }
         }
     </style>
 </head>
