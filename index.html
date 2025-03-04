@@ -3,33 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Upload Fix</title>
+    <title>SFCC Sponsorship Ribbon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a2b3c;
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+        }
+        #container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #2e3b4e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        #upload-btn, #generate-btn, #regenerate-btn, #go-back-btn, #download-btn {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        #upload-btn:hover, #generate-btn:hover, #regenerate-btn:hover, #go-back-btn:hover, #download-btn:hover {
+            background-color: #357abd;
+        }
+        #canvas {
+            border: 2px solid #ffffff;
+            margin-top: 20px;
+        }
+        #logo-preview {
+            max-width: 100px;
+            margin: 10px 0;
+        }
+        .button-group {
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-    <div>
+    <div id="container">
+        <h1>SFCC Sponsorship Ribbon Generator</h1>
+        <p>Upload your logo to create a unique Space Force Cadet Corps sponsorship ribbon!</p>
+        
         <input type="file" id="logo-upload" accept="image/*" style="display: none;">
         <button id="upload-btn">Upload Logo</button>
+        <img id="logo-preview" src="" alt="" style="display: none;">
+        
+        <div class="button-group">
+            <button id="generate-btn" disabled>Generate Ribbon</button>
+            <button id="regenerate-btn" disabled>Regenerate</button>
+            <button id="go-back-btn" disabled>Go Back</button>
+            <button id="download-btn" disabled>Download Ribbon</button>
+        </div>
+        
+        <canvas id="canvas" width="300" height="100"></canvas>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const uploadBtn = document.getElementById('upload-btn');
-            const logoUpload = document.getElementById('logo-upload');
+        console.log('Script started');
 
-            if (uploadBtn && logoUpload) {
-                uploadBtn.addEventListener('click', () => {
-                    console.log('Upload button clicked');
-                    logoUpload.click();
-                });
+        const uploadBtn = document.getElementById('upload-btn');
+        const logoUpload = document.getElementById('logo-upload');
+        const logoPreview = document.getElementById('logo-preview');
+        const generateBtn = document.getElementById('generate-btn');
+        const regenerateBtn = document.getElementById('regenerate-btn');
+        const goBackBtn = document.getElementById('go-back-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let uploadedImage = null;
+        let previousRibbons = [];
 
-                logoUpload.addEventListener('change', (e) => {
-                    console.log('File selected:', e.target.files[0]);
-                    // Add your file handling code here
-                });
-            } else {
-                console.error('Upload elements not found');
+        // Debugging: Check if elements are found
+        if (!uploadBtn) console.error('Upload button not found');
+        if (!logoUpload) console.error('Logo upload input not found');
+        if (!logoPreview) console.error('Logo preview image not found');
+        if (!generateBtn) console.error('Generate button not found');
+        if (!regenerateBtn) console.error('Regenerate button not found');
+        if (!goBackBtn) console.error('Go back button not found');
+        if (!downloadBtn) console.error('Download button not found');
+        if (!canvas) console.error('Canvas not found');
+
+        // Upload button triggers file input
+        uploadBtn.addEventListener('click', () => {
+            console.log('Upload button clicked');
+            logoUpload.click();
+        });
+
+        // Handle file selection
+        logoUpload.addEventListener('change', (e) => {
+            console.log('File selected');
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    uploadedImage = new Image();
+                    uploadedImage.onload = () => {
+                        logoPreview.src = event.target.result;
+                        logoPreview.style.display = 'block';
+                        generateBtn.disabled = false;
+                        previousRibbons = [];
+                    };
+                    uploadedImage.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
             }
         });
+
+        // Generate ribbon function
+        function generateRibbon() {
+            if (!uploadedImage) return;
+
+            console.log('Generating ribbon');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const colorThief = new ColorThief();
+            const palette = colorThief.getPalette(uploadedImage, 5);
+            let colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+
+            const totalStripes = 10;
+            const stripeWidths = generateStripeWidths(totalStripes, canvas.width);
+            const stripeColors = generateStripeColors(colors, totalStripes);
+
+            let currentX = 0;
+            stripeWidths.forEach((width, index) => {
+                ctx.fillStyle = stripeColors[index];
+                ctx.fillRect(currentX, 0, width, canvas.height);
+                currentX += width;
+            });
+
+            const lineSpacing = canvas.height / 16;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+            ctx.lineWidth = 1;
+            for (let i = 1; i < 16; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * lineSpacing);
+                ctx.lineTo(canvas.width, i * lineSpacing);
+                ctx.stroke();
+            }
+
+            previousRibbons.push(canvas.toDataURL());
+            regenerateBtn.disabled = false;
+            goBackBtn.disabled = previousRibbons.length <= 1;
+            downloadBtn.disabled = false;
+        }
+
+        // Generate random stripe widths
+        function generateStripeWidths(totalStripes, ribbonWidth) {
+            const widths = [];
+            for (let i = 0; i < totalStripes; i++) {
+                widths.push(Math.floor(Math.random() * 40) + 10); // Random width between 10 and 50
+            }
+            const totalWidth = widths.reduce((sum, w) => sum + w, 0);
+            const scale = ribbonWidth / totalWidth;
+            return widths.map(w => Math.round(w * scale));
+        }
+
+        // Assign colors to stripes
+        function generateStripeColors(colors, totalStripes) {
+            const stripeColors = [];
+            for (let i = 0; i < totalStripes; i++) {
+                stripeColors.push(colors[i % colors.length]);
+            }
+            return stripeColors;
+        }
+
+        // Event listeners for buttons
+        generateBtn.addEventListener('click', generateRibbon);
+        regenerateBtn.addEventListener('click', generateRibbon);
+        goBackBtn.addEventListener('click', () => {
+            if (previousRibbons.length > 1) {
+                previousRibbons.pop();
+                const previousData = previousRibbons[previousRibbons.length - 1];
+                const img = new Image();
+                img.onload = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = previousData;
+                goBackBtn.disabled = previousRibbons.length <= 1;
+            }
+        });
+        downloadBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'sfcc-sponsorship-ribbon.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+
+        console.log('Script ended');
     </script>
 </body>
 </html>
