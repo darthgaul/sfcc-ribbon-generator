@@ -10,48 +10,46 @@
             background-color: #1a2b3c;
             color: #ffffff;
             text-align: center;
-            padding: 5px;
+            padding: 20px;
             margin: 0;
             overflow: auto; /* Allows scrolling if content overflows */
         }
         #container {
-            max-width: 500px;
+            max-width: 600px;
             margin: 0 auto;
             background-color: #2e3b4e;
-            padding: 5px;
-            border-radius: 3px;
-            box-shadow: 0 0 3px rgba(0,0,0,0.5);
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
             min-height: 100%; /* Expands with content */
             overflow: visible; /* Ensures content isn’t clipped */
         }
-        #upload-btn, #generate-btn, #go-back-btn, #download-btn {
+        .section {
+            margin-bottom: 20px;
+        }
+        #upload-btn, #generate-btn, #go-back-btn, #download-btn, #add-bar, #custom-download-btn {
             background-color: #4a90e2;
             color: white;
             border: none;
-            padding: 6px 12px;
-            margin: 2px;
+            padding: 5px 10px;
+            margin: 5px;
             cursor: pointer;
-            border-radius: 2px;
-            font-size: 12px;
-            width: auto;
-            min-width: 80px;
+            border-radius: 3px;
         }
-        #upload-btn:hover, #generate-btn:hover, #go-back-btn:hover, #download-btn:hover {
+        #upload-btn:hover, #generate-btn:hover, #go-back-btn:hover, #download-btn:hover, #add-bar:hover, #custom-download-btn:hover {
             background-color: #357abd;
         }
-        #canvas {
-            width: 300px; /* Fixed width to prevent stretching */
-            height: 100px; /* Fixed height to maintain proportions */
-            margin: 5px auto; /* Center the canvas */
+        #canvas, #custom-canvas {
+            margin: 20px auto;
             border: 1px solid #ffffff;
         }
         #logo-preview {
-            max-width: 60px; /* Reverted to original constrained width */
-            max-height: 100px; /* Reverted to original height limit */
+            max-width: 60px; /* Constrained width */
+            max-height: 100px; /* Constrained height */
             margin: 3px auto; /* Center and minimal margin */
             object-fit: contain; /* Maintain aspect ratio, no stretching */
         }
-        #download-instructions {
+        #download-instructions, #custom-download-instructions {
             display: none; /* Hidden by default */
             margin-top: 5px; /* Space below ribbon */
             font-size: 12px;
@@ -64,6 +62,23 @@
             flex-wrap: wrap;
             gap: 4px;
         }
+        .input-group {
+            margin: 10px 0;
+            text-align: left;
+        }
+        .bar-input {
+            margin: 5px 0;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .bar-swatch {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
         button:disabled {
             background-color: #5a7ea5;
             cursor: not-allowed;
@@ -71,18 +86,17 @@
         @media (max-width: 480px) {
             #container {
                 max-width: 100%;
-                padding: 3px;
+                padding: 10px;
             }
-            #upload-btn, #generate-btn, #go-back-btn, #download-btn {
+            #upload-btn, #generate-btn, #go-back-btn, #download-btn, #add-bar, #custom-download-btn {
                 padding: 4px 8px;
                 font-size: 10px;
-                min-width: 60px;
             }
             #logo-preview {
-                max-width: 40px; /* Adjusted for mobile to keep it small */
-                max-height: 80px; /* Kept original mobile height limit */
+                max-width: 40px; /* Adjusted for mobile */
+                max-height: 80px; /* Kept original mobile height */
             }
-            #download-instructions {
+            #download-instructions, #custom-download-instructions {
                 font-size: 10px; /* Smaller font on mobile */
             }
             body, #container {
@@ -107,27 +121,56 @@
 </head>
 <body>
     <div id="container">
-        <h1>SFCC Sponsorship Ribbon Generator</h1>
-        <p>Upload your logo to create a unique Space Force Cadet Corps sponsorship ribbon!</p>
-        
-        <input type="file" id="logo-upload" accept="image/*" style="display: none;">
-        <button id="upload-btn">Upload Logo</button>
-        <img id="logo-preview" src="" alt="" style="display: none;">
-        
-        <div class="button-group">
-            <button id="generate-btn" disabled>Generate Ribbon</button>
-            <button id="go-back-btn" disabled>Go Back</button>
-            <button id="download-btn" disabled>Download Ribbon</button>
+        <!-- Original Auto-Generated Ribbon Generator -->
+        <div class="section">
+            <h1>SFCC Sponsorship Ribbon Generator</h1>
+            <p>Upload your logo to create a unique Space Force Cadet Corps sponsorship ribbon!</p>
+            
+            <input type="file" id="logo-upload" accept="image/*" style="display: none;">
+            <button id="upload-btn">Upload Logo</button>
+            <img id="logo-preview" src="" alt="" style="display: none;">
+            
+            <div class="button-group">
+                <button id="generate-btn" disabled>Generate Ribbon</button>
+                <button id="go-back-btn" disabled>Go Back</button>
+                <button id="download-btn" disabled>Download Ribbon</button>
+            </div>
+            
+            <canvas id="canvas" width="300" height="100"></canvas>
+            <p id="download-instructions">If download doesn’t work, right-click the ribbon and save image as...</p>
         </div>
-        
-        <canvas id="canvas" width="300" height="100"></canvas>
-        <p id="download-instructions">If download doesn’t work, right-click the ribbon and save image as...</p>
+
+        <!-- New Customizable Ribbon Generator -->
+        <div class="section">
+            <h1>Customizable SFCC Sponsorship Ribbon Generator</h1>
+            <p>Customize your ribbon by specifying bar count, widths, and colors. The design will be mirrored from the center.</p>
+            
+            <div class="input-group">
+                <label><input type="checkbox" id="include-central"> Include Central Bar</label>
+            </div>
+            
+            <div id="central-bar-section" style="display: none;">
+                <div class="input-group">
+                    <label>Central Bar Width: <input type="number" id="central-width" min="1" step="1" value="20"></label>
+                    <label>Central Bar Color: <input type="text" id="central-color" pattern="#[0-9A-Fa-f]{6}" value="#FFFFFF"></label>
+                    <span id="central-color-swatch" class="bar-swatch" style="background-color: #FFFFFF;"></span>
+                </div>
+            </div>
+            
+            <div id="side-bars">
+                <!-- Dynamically added side bar inputs -->
+            </div>
+            <button id="add-bar">Add Side Bar</button>
+            
+            <canvas id="custom-canvas" width="300" height="100"></canvas>
+            <button id="custom-download-btn">Download Custom Ribbon</button>
+            <p id="custom-download-instructions">If download doesn’t work, right-click the ribbon and save image as...</p>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
     <script>
-        console.log('Script started');
-
+        // Original Auto-Generated Ribbon Generator
         const uploadBtn = document.getElementById('upload-btn');
         const logoUpload = document.getElementById('logo-upload');
         const logoPreview = document.getElementById('logo-preview');
@@ -135,29 +178,20 @@
         const goBackBtn = document.getElementById('go-back-btn');
         const downloadBtn = document.getElementById('download-btn');
         const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
         const downloadInstructions = document.getElementById('download-instructions');
         let uploadedImage = null;
         let previousRibbons = [];
 
-        // Debugging: Check if elements are found
-        if (!uploadBtn) console.error('Upload button not found');
-        if (!logoUpload) console.error('Logo upload input not found');
-        if (!logoPreview) console.error('Logo preview image not found');
-        if (!generateBtn) console.error('Generate button not found');
-        if (!goBackBtn) console.error('Go back button not found');
-        if (!downloadBtn) console.error('Download button not found');
-        if (!canvas) console.error('Canvas not found');
-        if (!downloadInstructions) console.error('Download instructions not found');
+        if (!uploadBtn || !logoUpload || !logoPreview || !generateBtn || !goBackBtn || !downloadBtn || !canvas || !downloadInstructions) {
+            console.error('One or more elements not found for auto-generated generator');
+        }
 
-        // Upload button triggers file input
         uploadBtn.addEventListener('click', () => {
             console.log('Upload button clicked');
-            logoUpload.value = ''; // Reset file input
+            logoUpload.value = '';
             logoUpload.click();
         });
 
-        // Handle file selection
         logoUpload.addEventListener('change', (e) => {
             console.log('File dialog closed or file selected');
             const file = e.target.files[0];
@@ -177,46 +211,38 @@
                 reader.readAsDataURL(file);
             } else {
                 console.log('File selection canceled');
-                logoUpload.value = ''; // Reset on cancel
+                logoUpload.value = '';
             }
         });
 
-        // Calculate color distance for spacing out similar colors
         function colorDistance(color1, color2) {
             const [r1, g1, b1] = color1.match(/\d+/g).map(Number);
             const [r2, g2, b2] = color2.match(/\d+/g).map(Number);
-            return Math.sqrt(
-                Math.pow(r2 - r1, 2) +
-                Math.pow(g2 - g1, 2) +
-                Math.pow(b2 - b1, 2)
-            );
+            return Math.sqrt(Math.pow(r2 - r1, 2) + Math.pow(g2 - g1, 2) + Math.pow(b2 - b1, 2));
         }
 
-        // Generate ribbon with perfect mirroring from the center
         function generateRibbon() {
             if (!uploadedImage) return;
 
             console.log('Generating ribbon');
+            const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Extract dominant colors from the logo using ColorThief with higher quality
             const colorThief = new ColorThief();
-            const palette = colorThief.getPalette(uploadedImage, 7, 20); // More colors, higher quality for dark logos and white
+            const palette = colorThief.getPalette(uploadedImage, 7, 20);
             let colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`);
 
-            // Filter and prioritize logo-like colors (blue, white, red, dark/bright), ensuring white is captured
             colors = colors.filter(color => {
                 const [r, g, b] = color.match(/\d+/g).map(Number);
                 const brightness = (r + g + b) / 3;
-                const isDark = brightness < 128; // Dark colors for dark logos
-                const isBright = brightness > 200; // Bright colors, including white
-                const isWhite = Math.abs(r - 255) < 20 && Math.abs(g - 255) < 20 && Math.abs(b - 255) < 20; // Close to white (tolerance of 20)
-                const isBlue = b > 50 && (r < b * 1.5) && (g < b * 1.5); // Lenient blue
-                const isRed = r > 50 && (b < r * 0.5) && (g < r * 0.5); // Lenient red
+                const isDark = brightness < 128;
+                const isBright = brightness > 200;
+                const isWhite = Math.abs(r - 255) < 20 && Math.abs(g - 255) < 20 && Math.abs(b - 255) < 20;
+                const isBlue = b > 50 && r < b * 1.5 && g < b * 1.5;
+                const isRed = r > 50 && b < r * 0.5 && g < r * 0.5;
                 return isDark || isBright || isWhite || isBlue || isRed;
             });
 
-            // Remove similar colors (minimum distance of 100 for distinctness)
             const uniqueColors = [];
             for (let i = 0; i < colors.length; i++) {
                 let isUnique = true;
@@ -230,54 +256,45 @@
             }
             colors = uniqueColors;
 
-            // Ensure at least 3 distinct colors, prioritizing white if present, or use raw palette
             if (!colors.some(color => {
                 const [r, g, b] = color.match(/\d+/g).map(Number);
                 return Math.abs(r - 255) < 20 && Math.abs(g - 255) < 20 && Math.abs(b - 255) < 20;
             })) {
-                // If white isn’t detected, manually add it if the logo likely has white
                 const hasWhite = palette.some(color => {
                     const [r, g, b] = color;
                     return Math.abs(r - 255) < 30 && Math.abs(g - 255) < 30 && Math.abs(b - 255) < 30;
                 });
-                if (hasWhite) colors.unshift('rgb(255, 255, 255)'); // Force white as the first color if detected
+                if (hasWhite) colors.unshift('rgb(255, 255, 255)');
             }
 
             while (colors.length < 3) {
-                if (colors.length === 0) colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`); // Use raw palette
+                if (colors.length === 0) colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`);
                 if (colors.length < 3) {
-                    const brightness = Math.random() < 0.5 ? Math.floor(Math.random() * 128) : 200 + Math.floor(Math.random() * 56); // Dark or bright
-                    colors.push(`rgb(${brightness}, ${brightness}, ${brightness})`); // Neutral fallback
+                    const brightness = Math.random() < 0.5 ? Math.floor(Math.random() * 128) : 200 + Math.floor(Math.random() * 56);
+                    colors.push(`rgb(${brightness}, ${brightness}, ${brightness})`);
                 }
             }
 
-            // Limit to 3 colors for consistency, shuffle for variety
             colors = shuffleArray(colors.slice(0, 3));
 
-            // Define total number of stripes (even number for perfect mirroring)
-            const totalStripes = 10; // 5 per side, mirrored
-            const halfStripes = totalStripes / 2; // 5 unique bars for left side
-            const ribbonWidth = canvas.width; // 300px
-            const halfWidth = ribbonWidth / 2; // 150px
+            const totalStripes = 10;
+            const halfStripes = totalStripes / 2;
+            const ribbonWidth = canvas.width;
+            const halfWidth = ribbonWidth / 2;
 
-            // Generate random widths for left half, summing to half the width
             const leftWidths = generateRandomWidths(halfStripes, halfWidth);
 
-            // Assign colors to left half (cycling through logo colors)
             const leftColors = [];
             for (let i = 0; i < halfStripes; i++) {
                 leftColors.push(colors[i % colors.length]);
             }
 
-            // Mirror for right half: reverse widths and colors
             const rightWidths = leftWidths.slice().reverse();
             const rightColors = leftColors.slice().reverse();
 
-            // Combine all bars for full ribbon
             const fullWidths = [...leftWidths, ...rightWidths];
             const fullColors = [...leftColors, ...rightColors];
 
-            // Draw the ribbon, ensuring no gaps
             let currentX = 0;
             fullWidths.forEach((width, index) => {
                 ctx.fillStyle = fullColors[index];
@@ -285,14 +302,12 @@
                 currentX += width;
             });
 
-            // Ensure full width coverage (should be exact, but add safeguard)
             if (currentX < ribbonWidth) {
-                ctx.fillStyle = fullColors[0]; // Fill any remaining space with first color
+                ctx.fillStyle = fullColors[0];
                 ctx.fillRect(currentX, 0, ribbonWidth - currentX, canvas.height);
             }
 
-            // Add horizontal lines for texture
-            const lineSpacing = canvas.height / 16; // 15 lines total
+            const lineSpacing = canvas.height / 16;
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
             ctx.lineWidth = 1;
             for (let i = 1; i < 16; i++) {
@@ -302,28 +317,23 @@
                 ctx.stroke();
             }
 
-            // Show download instructions
             downloadInstructions.style.display = 'block';
-
-            // Save state
             previousRibbons.push(canvas.toDataURL());
-            generateBtn.disabled = false; // "Generate Ribbon" now handles regeneration
+            generateBtn.disabled = false;
             goBackBtn.disabled = previousRibbons.length <= 1;
             downloadBtn.disabled = false;
         }
 
-        // Generate random widths summing to a target
         function generateRandomWidths(numBars, targetSum) {
-            let widths = Array(numBars).fill(0).map(() => Math.floor(Math.random() * 40) + 10); // Random between 10-50px
+            let widths = Array(numBars).fill(0).map(() => Math.floor(Math.random() * 40) + 10);
             const currentSum = widths.reduce((sum, w) => sum + w, 0);
             const scale = targetSum / currentSum;
             widths = widths.map(w => Math.round(w * scale));
             const adjustedSum = widths.slice(0, -1).reduce((sum, w) => sum + w, 0);
-            widths[numBars - 1] = targetSum - adjustedSum; // Adjust last width for exact sum
+            widths[numBars - 1] = targetSum - adjustedSum;
             return widths;
         }
 
-        // Shuffle array for randomizing colors
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -332,14 +342,28 @@
             return array;
         }
 
-        // Event listeners for buttons
-        generateBtn.addEventListener('click', generateRibbon);
+        downloadBtn.addEventListener('click', () => {
+            console.log('Download button clicked');
+            const dataUrl = canvas.toDataURL('image/png');
+            const blob = dataURLtoBlob(dataUrl);
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = 'sfcc-sponsorship-ribbon.png';
+            link.href = url;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        });
+
         goBackBtn.addEventListener('click', () => {
             if (previousRibbons.length > 1) {
                 previousRibbons.pop();
                 const previousData = previousRibbons[previousRibbons.length - 1];
                 const img = new Image();
                 img.onload = () => {
+                    const ctx = canvas.getContext('2d');
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     ctx.drawImage(img, 0, 0);
                 };
@@ -347,22 +371,9 @@
                 goBackBtn.disabled = previousRibbons.length <= 1;
             }
         });
-        downloadBtn.addEventListener('click', () => {
-            console.log('Download button clicked');
-            const dataUrl = canvas.toDataURL('image/png');
-            const blob = dataURLtoBlob(dataUrl); // Convert data URL to Blob
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.download = 'sfcc-sponsorship-ribbon.png';
-            link.href = url;
-            link.target = '_blank'; // Open in new tab/window
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link); // Clean up
-            window.URL.revokeObjectURL(url); // Clean up URL object
-        });
 
-        // Helper function to convert data URL to Blob
+        generateBtn.addEventListener('click', generateRibbon);
+
         function dataURLtoBlob(dataUrl) {
             const arr = dataUrl.split(',');
             const mime = arr[0].match(/:(.*?);/)[1];
@@ -375,7 +386,144 @@
             return new Blob([u8arr], { type: mime });
         }
 
-        console.log('Script ended');
+        // Customizable Ribbon Generator
+        const centralSection = document.getElementById('central-bar-section');
+        const centralWidthInput = document.getElementById('central-width');
+        const centralColorInput = document.getElementById('central-color');
+        const centralSwatch = document.getElementById('central-color-swatch');
+        const sideBarsContainer = document.getElementById('side-bars');
+        const addBarBtn = document.getElementById('add-bar');
+        const customCanvas = document.getElementById('custom-canvas');
+        const customDownloadBtn = document.getElementById('custom-download-btn');
+        const includeCentralCheckbox = document.getElementById('include-central');
+        const customDownloadInstructions = document.getElementById('custom-download-instructions');
+
+        let includeCentral = false;
+        let centralWidth = 20;
+        let centralColor = '#FFFFFF';
+        let sideBars = [];
+
+        function updateCustomPreview() {
+            includeCentral = includeCentralCheckbox.checked;
+            if (includeCentral) {
+                centralWidth = parseFloat(centralWidthInput.value) || 0;
+                centralColor = centralColorInput.value.match(/^#[0-9A-Fa-f]{6}$/) ? centralColorInput.value : '#FFFFFF';
+                centralSwatch.style.backgroundColor = centralColor;
+            }
+            sideBars = [];
+            const barDivs = sideBarsContainer.querySelectorAll('.bar-input');
+            barDivs.forEach(div => {
+                const widthInput = div.querySelector('.bar-width');
+                const colorInput = div.querySelector('.bar-color');
+                const width = parseFloat(widthInput.value) || 0;
+                const color = colorInput.value.match(/^#[0-9A-Fa-f]{6}$/) ? colorInput.value : '#FFFFFF';
+                sideBars.push({ width, color });
+            });
+            drawCustomRibbon();
+        }
+
+        function drawCustomRibbon() {
+            const ctx = customCanvas.getContext('2d');
+            ctx.clearRect(0, 0, customCanvas.width, customCanvas.height);
+
+            let totalUnits = 0;
+            if (includeCentral) totalUnits += Math.max(centralWidth, 0);
+            for (let bar of sideBars) totalUnits += 2 * Math.max(bar.width, 0);
+
+            if (totalUnits === 0) {
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = '20px Arial';
+                ctx.fillText('Add bars to generate ribbon', 50, 50);
+                return;
+            }
+
+            const pixelPerUnit = customCanvas.width / totalUnits;
+            let currentX = 0;
+
+            // Draw side bars in reverse order (left side)
+            for (let i = sideBars.length - 1; i >= 0; i--) {
+                const bar = sideBars[i];
+                const barWidth = bar.width * pixelPerUnit;
+                ctx.fillStyle = bar.color;
+                ctx.fillRect(currentX, 0, barWidth, customCanvas.height);
+                currentX += barWidth;
+            }
+
+            // Draw central bar if included
+            if (includeCentral) {
+                const centralBarWidth = centralWidth * pixelPerUnit;
+                ctx.fillStyle = centralColor;
+                ctx.fillRect(currentX, 0, centralBarWidth, customCanvas.height);
+                currentX += centralBarWidth;
+            }
+
+            // Draw side bars in forward order (right side)
+            for (let bar of sideBars) {
+                const barWidth = bar.width * pixelPerUnit;
+                ctx.fillStyle = bar.color;
+                ctx.fillRect(currentX, 0, barWidth, customCanvas.height);
+                currentX += barWidth;
+            }
+        }
+
+        function addSideBar() {
+            const barIndex = sideBarsContainer.children.length + 1;
+            const barDiv = document.createElement('div');
+            barDiv.className = 'bar-input';
+            barDiv.innerHTML = `
+                <span>Bar ${barIndex} (closest to center is 1)</span>
+                <label>Width: <input type="number" class="bar-width" min="1" step="1" value="10"></label>
+                <label>Color: <input type="text" class="bar-color" pattern="#[0-9A-Fa-f]{6}" value="#FFFFFF"></label>
+                <span class="bar-swatch" style="background-color: #FFFFFF;"></span>
+                <button class="remove-bar">Remove</button>
+            `;
+            sideBarsContainer.appendChild(barDiv);
+
+            const widthInput = barDiv.querySelector('.bar-width');
+            const colorInput = barDiv.querySelector('.bar-color');
+            const swatch = barDiv.querySelector('.bar-swatch');
+            const removeBtn = barDiv.querySelector('.remove-bar');
+
+            widthInput.addEventListener('input', updateCustomPreview);
+            colorInput.addEventListener('input', () => {
+                swatch.style.backgroundColor = colorInput.value.match(/^#[0-9A-Fa-f]{6}$/) ? colorInput.value : '#FFFFFF';
+                updateCustomPreview();
+            });
+            removeBtn.addEventListener('click', () => {
+                sideBarsContainer.removeChild(barDiv);
+                const barDivs = sideBarsContainer.querySelectorAll('.bar-input');
+                barDivs.forEach((div, index) => {
+                    const span = div.querySelector('span');
+                    span.textContent = `Bar ${index + 1} (closest to center is 1)`;
+                });
+                updateCustomPreview();
+            });
+            updateCustomPreview();
+        }
+
+        // Event listeners for customizable generator
+        includeCentralCheckbox.addEventListener('change', (e) => {
+            centralSection.style.display = e.target.checked ? 'block' : 'none';
+            updateCustomPreview();
+        });
+        centralWidthInput.addEventListener('input', updateCustomPreview);
+        centralColorInput.addEventListener('input', () => {
+            centralSwatch.style.backgroundColor = centralColorInput.value.match(/^#[0-9A-Fa-f]{6}$/) ? centralColorInput.value : '#FFFFFF';
+            updateCustomPreview();
+        });
+        addBarBtn.addEventListener('click', addSideBar);
+        customDownloadBtn.addEventListener('click', () => {
+            console.log('Custom Download button clicked');
+            const dataUrl = customCanvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = 'custom-ribbon.png';
+            link.href = dataUrl;
+            link.click();
+            customDownloadInstructions.style.display = 'block';
+        });
+
+        // Initialize with one side bar
+        addSideBar();
     </script>
 </body>
 </html>
