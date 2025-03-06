@@ -204,17 +204,34 @@
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Extract colors from the uploaded logo
+            // Crop the image to focus on the central part
+            const cropPercent = 0.1; // Crop 10% from each side
+            const cropWidth = uploadedImage.width * cropPercent;
+            const cropHeight = uploadedImage.height * cropPercent;
+            const croppedCanvas = document.createElement('canvas');
+            croppedCanvas.width = uploadedImage.width - 2 * cropWidth;
+            croppedCanvas.height = uploadedImage.height - 2 * cropHeight;
+            const croppedCtx = croppedCanvas.getContext('2d');
+            croppedCtx.drawImage(
+                uploadedImage,
+                cropWidth, cropHeight,              // Source x, y (start cropping here)
+                croppedCanvas.width, croppedCanvas.height, // Source width, height (area to crop)
+                0, 0,                               // Destination x, y
+                croppedCanvas.width, croppedCanvas.height  // Destination width, height
+            );
+
+            // Extract colors from the cropped canvas
             const colorThief = new ColorThief();
-            const palette = colorThief.getPalette(uploadedImage, 5); // Extract up to 5 colors
+            const palette = colorThief.getPalette(croppedCanvas, 5); // Extract 5 colors
             let colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`);
 
             // Ensure at least 5 colors by duplicating if necessary
             while (colors.length < 5) {
                 colors = colors.concat(colors);
             }
-            colors = colors.slice(0, 5); // Limit to 5 unique colors
-            const shuffledColors = shuffleArray(colors); // Randomize the order each time
+            colors = colors.slice(0, 5); // Limit to 5 colors
+
+            const shuffledColors = shuffleArray(colors); // Randomize the order
 
             const totalStripes = 10; // 5 bars per side
             const halfStripes = totalStripes / 2;
@@ -227,8 +244,8 @@
             const fullWidths = [...leftWidths, ...rightWidths];
 
             // Assign shuffled colors with mirroring
-            const leftColors = shuffledColors.slice(0, halfStripes); // 5 randomized colors for left
-            const rightColors = leftColors.slice().reverse(); // Reverse for right-side mirroring
+            const leftColors = shuffledColors.slice(0, halfStripes);
+            const rightColors = leftColors.slice().reverse();
             const fullColors = [...leftColors, ...rightColors];
 
             // Draw the ribbon
