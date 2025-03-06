@@ -5,26 +5,104 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SFCC Sponsorship Ribbon Generator</title>
     <style>
-body {
-    font-family: Arial, sans-serif;
-    background-color: #1a2b3c;
-    color: #ffffff;
-    text-align: center;
-    padding: 5px;
-    margin: 0;
-    overflow: auto; /* Allows scrolling if content overflows */
-}
-
-#container {
-    max-width: 500px;
-    margin: 0 auto;
-    background-color: #2e3b4e;
-    padding: 5px;
-    border-radius: 3px;
-    box-shadow: 0 0 3px rgba(0,0,0,0.5);
-    min-height: 100%; /* Expands with content */
-    overflow: visible; /* Ensures content isn’t clipped */
-}
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a2b3c;
+            color: #ffffff;
+            text-align: center;
+            padding: 5px;
+            margin: 0;
+            overflow: auto; /* Allows scrolling if content overflows */
+        }
+        #container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #2e3b4e;
+            padding: 5px;
+            border-radius: 3px;
+            box-shadow: 0 0 3px rgba(0,0,0,0.5);
+            min-height: 100%; /* Expands with content */
+            overflow: visible; /* Ensures content isn’t clipped */
+        }
+        #upload-btn, #generate-btn, #go-back-btn, #download-btn {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            margin: 2px;
+            cursor: pointer;
+            border-radius: 2px;
+            font-size: 12px;
+            width: auto;
+            min-width: 80px;
+        }
+        #upload-btn:hover, #generate-btn:hover, #go-back-btn:hover, #download-btn:hover {
+            background-color: #357abd;
+        }
+        #canvas {
+            width: 300px; /* Fixed width to prevent stretching */
+            height: 100px; /* Fixed height to maintain proportions */
+            margin: 5px auto; /* Center the canvas */
+            border: 1px solid #ffffff;
+        }
+        #logo-preview {
+            max-width: 100%; /* Full width, but constrained */
+            max-height: 100px; /* Limit height to prevent stretching */
+            margin: 3px auto; /* Center and minimal margin */
+            object-fit: contain; /* Maintain aspect ratio, no stretching */
+        }
+        #download-instructions {
+            display: none; /* Hidden by default */
+            margin-top: 5px; /* Space below ribbon */
+            font-size: 12px;
+            color: #ffffff;
+        }
+        .button-group {
+            margin-top: 3px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        button:disabled {
+            background-color: #5a7ea5;
+            cursor: not-allowed;
+        }
+        @media (max-width: 480px) {
+            #container {
+                max-width: 100%;
+                padding: 3px;
+            }
+            #upload-btn, #generate-btn, #go-back-btn, #download-btn {
+                padding: 4px 8px;
+                font-size: 10px;
+                min-width: 60px;
+            }
+            #logo-preview {
+                max-width: 80%; /* Slightly smaller on mobile */
+                max-height: 80px; /* Smaller height on mobile */
+            }
+            #download-instructions {
+                font-size: 10px; /* Smaller font on mobile */
+            }
+            body, #container {
+                -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
+            }
+        }
+        /* Optional scrollbar styling for better visibility */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #2e3b4e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4a90e2;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #357abd;
+        }
     </style>
 </head>
 <body>
