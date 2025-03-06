@@ -24,114 +24,52 @@
             min-height: 100%;
             overflow: visible;
         }
-        .section {
-            margin-bottom: 20px;
-        }
+        .section { margin-bottom: 20px; }
         #upload-btn, #generate-btn, #go-back-btn, #download-btn, #add-bar, #custom-download-btn {
-            background-color: #4a90e2;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            margin: 5px;
-            cursor: pointer;
-            border-radius: 3px;
+            background-color: #4a90e2; color: white; border: none; padding: 5px 10px; margin: 5px; cursor: pointer; border-radius: 3px;
         }
         #upload-btn:hover, #generate-btn:hover, #go-back-btn:hover, #download-btn:hover, #add-bar:hover, #custom-download-btn:hover {
             background-color: #357abd;
         }
-        #canvas, #custom-canvas {
-            margin: 20px auto;
-            border: 1px solid #ffffff;
-        }
-        #logo-preview {
-            max-width: 60px;
-            max-height: 100px;
-            margin: 3px auto;
-            object-fit: contain;
-        }
-        #download-instructions, #custom-download-instructions {
-            display: none;
-            margin-top: 5px;
-            font-size: 12px;
-            color: #ffffff;
-        }
-        .button-group {
-            margin-top: 3px;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
-        .input-group {
-            margin: 10px 0;
-            text-align: left;
-        }
-        .bar-input {
-            margin: 5px 0;
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-        }
-        .bar-swatch {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            margin-left: 5px;
-            vertical-align: middle;
-        }
-        button:disabled {
-            background-color: #5a7ea5;
-            cursor: not-allowed;
-        }
+        #canvas, #custom-canvas { margin: 20px auto; border: 1px solid #ffffff; }
+        #logo-preview { max-width: 60px; max-height: 100px; margin: 3px auto; object-fit: contain; }
+        #download-instructions, #custom-download-instructions { display: none; margin-top: 5px; font-size: 12px; color: #ffffff; }
+        .button-group { margin-top: 3px; display: flex; justify-content: center; flex-wrap: wrap; gap: 4px; }
+        .input-group { margin: 10px 0; text-align: left; }
+        .bar-input { margin: 5px 0; padding: 5px; border: 1px solid #ccc; border-radius: 3px; }
+        .bar-swatch { display: inline-block; width: 20px; height: 20px; margin-left: 5px; vertical-align: middle; }
+        button:disabled { background-color: #5a7ea5; cursor: not-allowed; }
         @media (max-width: 480px) {
-            #container {
-                max-width: 100%;
-                padding: 10px;
-            }
-            #upload-btn, #generate-btn, #go-back-btn, #download-btn, #add-bar, #custom-download-btn {
-                padding: 4px 8px;
-                font-size: 10px;
-            }
-            #logo-preview {
-                max-width: 40px;
-                max-height: 80px;
-            }
-            #download-instructions, #custom-download-instructions {
-                font-size: 10px;
-            }
+            #container { max-width: 100%; padding: 10px; }
+            #upload-btn, #generate-btn, #go-back-btn, #download-btn, #add-bar, #custom-download-btn { padding: 4px 8px; font-size: 10px; }
+            #logo-preview { max-width: 40px; max-height: 80px; }
+            #download-instructions, #custom-download-instructions { font-size: 10px; }
         }
     </style>
 </head>
 <body>
     <div id="container">
-        <!-- Original Auto-Generated Ribbon Generator -->
         <div class="section">
             <h1>SFCC Sponsorship Ribbon Generator</h1>
             <p>Upload your logo to create a unique Space Force Cadet Corps sponsorship ribbon!</p>
-            
             <input type="file" id="logo-upload" accept="image/*" style="display: none;">
             <button id="upload-btn">Upload Logo</button>
             <img id="logo-preview" src="" alt="" style="display: none;">
-            
             <div class="button-group">
                 <button id="generate-btn" disabled>Generate Ribbon</button>
                 <button id="go-back-btn" disabled>Go Back</button>
                 <button id="download-btn" disabled>Download Ribbon</button>
             </div>
-            
             <canvas id="canvas" width="300" height="100"></canvas>
             <p id="download-instructions">If download doesn’t work, right-click the ribbon and save image as...</p>
         </div>
 
-        <!-- New Customizable Ribbon Generator -->
         <div class="section">
             <h1>Customizable SFCC Sponsorship Ribbon Generator</h1>
             <p>Customize your ribbon by specifying bar count, widths, and colors. The design will be mirrored from the center.</p>
-            
             <div class="input-group">
                 <label><input type="checkbox" id="include-central"> Include Central Bar</label>
             </div>
-            
             <div id="central-bar-section" style="display: none;">
                 <div class="input-group">
                     <label>Central Bar Width: <input type="number" id="central-width" min="1" step="1" value="20"></label>
@@ -139,12 +77,8 @@
                     <span id="central-color-swatch" class="bar-swatch" style="background-color: #FFFFFF;"></span>
                 </div>
             </div>
-            
-            <div id="side-bars">
-                <!-- Dynamically added side bar inputs -->
-            </div>
+            <div id="side-bars"></div>
             <button id="add-bar">Add Side Bar</button>
-            
             <canvas id="custom-canvas" width="300" height="100"></canvas>
             <button id="custom-download-btn">Download Custom Ribbon</button>
             <p id="custom-download-instructions">If download doesn’t work, right-click the ribbon and save image as...</p>
@@ -153,7 +87,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
     <script>
-        // Original Auto-Generated Ribbon Generator
+        // Upload Logo Ribbon Generator
         const uploadBtn = document.getElementById('upload-btn');
         const logoUpload = document.getElementById('logo-upload');
         const logoPreview = document.getElementById('logo-preview');
@@ -207,7 +141,6 @@
                 currentX += width;
             });
 
-            // Add horizontal lines (same as original)
             const lineSpacing = canvas.height / 16;
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
             ctx.lineWidth = 1;
@@ -251,7 +184,7 @@
             link.click();
         });
 
-        // Customizable Ribbon Generator
+        // Custom Ribbon Creator
         const includeCentralCheckbox = document.getElementById('include-central');
         const centralSection = document.getElementById('central-bar-section');
         const centralWidthInput = document.getElementById('central-width');
@@ -326,16 +259,16 @@
                 currentX += barWidth;
             }
 
-            // Add horizontal lines (same as original)
             const lineSpacing = customCanvas.height / 16;
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'black'; // Temporary for testing
+            ctx.lineWidth = 2; // Temporary for testing
             for (let i = 1; i < 16; i++) {
                 ctx.beginPath();
                 ctx.moveTo(0, i * lineSpacing);
                 ctx.lineTo(customCanvas.width, i * lineSpacing);
                 ctx.stroke();
             }
+            console.log('Horizontal lines drawn');
         }
 
         function addSideBar() {
@@ -380,7 +313,6 @@
             customDownloadInstructions.style.display = 'block';
         });
 
-        // Initialize with one side bar
         addSideBar();
     </script>
 </body>
