@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customizable SFCC Sponsorship Ribbon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a2b3c;
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            overflow: auto;
+        }
+        #container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #2e3b4e;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        .input-group {
+            margin: 10px 0;
+            text-align: left;
+        }
+        .bar-input {
+            margin: 5px 0;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .bar-swatch {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        button {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        #canvas {
+            margin: 20px auto;
+            border: 1px solid #ffffff;
+        }
+        @media (max-width: 480px) {
+            #container {
+                max-width: 100%;
+                padding: 10px;
+            }
+            button {
+                padding: 4px 8px;
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Customizable SFCC Sponsorship Ribbon Generator</h1>
+        <p>Customize your ribbon by specifying bar count, widths, and colors. The design will be mirrored from the center.</p>
+        
+        <div class="input-group">
+            <label><input type="checkbox" id="include-central"> Include Central Bar</label>
+        </div>
+        
+        <div id="central-bar-section" style="display: none;">
+            <div class="input-group">
+                <label>Central Bar Width: <input type="number" id="central-width" min="1" step="1" value="20"></label>
+                <label>Central Bar Color: <input type="text" id="central-color" pattern="#[0-9A-Fa-f]{6}" value="#FFFFFF"></label>
+                <span id="central-color-swatch" class="bar-swatch" style="background-color: #FFFFFF;"></span>
+            </div>
+        </div>
+        
+        <div id="side-bars">
+            <!-- Dynamically added side bar inputs -->
+        </div>
+        <button id="add-bar">Add Side Bar</button>
+        
+        <canvas id="canvas" width="300" height="100"></canvas>
+        <button id="download-btn">Download Ribbon</button>
+    </div>
+
+    <script>
+        const centralSection = document.getElementById('central-bar-section');
+        const centralWidthInput = document.getElementById('central-width');
+        const centralColorInput = document.getElementById('central-color');
+        const centralSwatch = document.getElementById('central-color-swatch');
+        const sideBarsContainer = document.getElementById('side-bars');
+        const addBarBtn = document.getElementById('add-bar');
+        const canvas = document.getElementById('canvas');
+        const downloadBtn = document.getElementById('download-btn');
+        const includeCentralCheckbox = document.getElementById('include-central');
+
+        let includeCentral = false;
+        let centralWidth = 20;
+        let centralColor = '#FFFFFF';
+        let sideBars = [];
+
+        function updatePreview() {
+            includeCentral = includeCentralCheckbox.checked;
+            if (includeCentral) {
+                centralWidth = parseFloat(centralWidthInput.value) || 0;
+                centralColor = centralColorInput.value.match(/^#[0-9A-Fa-f]{6}$/) ? centralColorInput.value : '#FFFFFF';
+                centralSwatch.style.backgroundColor = centralColor;
+            }
+            sideBars = [];
+            const barDivs = sideBarsContainer.querySelectorAll('.bar-input');
+            barDivs.forEach(div => {
+                const widthInput = div.querySelector('.bar-width');
+                const colorInput = div.querySelector('.bar-color');
+                const width = parseFloat(widthInput.value) || 0;
+                const color = colorInput.value.match(/^#[0-9A-Fa-f]{6}$/) ? colorInput.value : '#FFFFFF';
+                sideBars.push({ width, color });
+            });
+            drawRibbon();
+        }
+
+        function drawRibbon() {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            let totalUnits = 0;
+            if (includeCentral) totalUnits += Math.max(centralWidth, 0);
+            for (let bar of sideBars) totalUnits += 2 * Math.max(bar.width, 0);
+
+            if (totalUnits === 0) {
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = '20px Arial';
+                ctx.fillText('Add bars to generate ribbon', 50, 50);
+                return;
+            }
+
+            const pixelPerUnit = canvas.width / totalUnits;
+            let currentX = 0;
+
+            // Draw side bars in reverse order (left side)
+            for (let i = sideBars.length - 1; i >= 0; i--) {
+                const bar = sideBars[i];
+                const barWidth = bar.width * pixelPerUnit;
+                ctx.fillStyle = bar.color;
+                ctx.fillRect(currentX, 0, barWidth, canvas.height);
+                currentX += barWidth;
+            }
+
+            // Draw central bar if included
+            if (includeCentral) {
+                const centralBarWidth = centralWidth * pixelPerUnit;
+                ctx.fillStyle = centralColor;
+                ctx.fillRect(currentX, 0, centralBarWidth, canvas.height);
+                currentX += centralBarWidth;
+            }
+
+            // Draw side bars in forward order (right side)
+            for (let bar of sideBars) {
+                const barWidth = bar.width * pixelPerUnit;
+                ctx.fillStyle = bar.color;
+                ctx.fillRect(currentX, 0, barWidth, canvas.height);
+                currentX += barWidth;
+            }
+        }
+
+        function addSideBar() {
+            const barIndex = sideBarsContainer.children.length + 1;
+            const barDiv = document.createElement('div');
+            barDiv.className = 'bar-input';
+            barDiv.innerHTML = `
+                <span>Bar ${barIndex} (closest to center is 1)</span>
+                <label>Width: <input type="number" class="bar-width" min="1" step="1" value="10"></label>
+                <label>Color: <input type="text" class="bar-color" pattern="#[0-9A-Fa-f]{6}" value="#FFFFFF"></label>
+                <span class="bar-swatch" style="background-color: #FFFFFF;"></span>
+                <button class="remove-bar">Remove</button>
+            `;
+            sideBarsContainer.appendChild(barDiv);
+
+            const widthInput = barDiv.querySelector('.bar-width');
+            const colorInput = barDiv.querySelector('.bar-color');
+            const swatch = barDiv.querySelector('.bar-swatch');
+            const removeBtn = barDiv.querySelector('.remove-bar');
+
+            widthInput.addEventListener('input', updatePreview);
+            colorInput.addEventListener('input', () => {
+                swatch.style.backgroundColor = colorInput.value.match(/^#[0-9A-Fa-f]{6}$/) ? colorInput.value : '#FFFFFF';
+                updatePreview();
+            });
+            removeBtn.addEventListener('click', () => {
+                sideBarsContainer.removeChild(barDiv);
+                const barDivs = sideBarsContainer.querySelectorAll('.bar-input');
+                barDivs.forEach((div, index) => {
+                    const span = div.querySelector('span');
+                    span.textContent = `Bar ${index + 1} (closest to center is 1)`;
+                });
+                updatePreview();
+            });
+            updatePreview();
+        }
+
+        // Event listeners
+        includeCentralCheckbox.addEventListener('change', (e) => {
+            centralSection.style.display = e.target.checked ? 'block' : 'none';
+            updatePreview();
+        });
+        centralWidthInput.addEventListener('input', updatePreview);
+        centralColorInput.addEventListener('input', () => {
+            centralSwatch.style.backgroundColor = centralColorInput.value.match(/^#[0-9A-Fa-f]{6}$/) ? centralColorInput.value : '#FFFFFF';
+            updatePreview();
+        });
+        addBarBtn.addEventListener('click', addSideBar);
+        downloadBtn.addEventListener('click', () => {
+            const dataUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = 'custom-ribbon.png';
+            link.href = dataUrl;
+            link.click();
+        });
+
+        // Initialize with one side bar
+        addSideBar();
+    </script>
+</body>
+</html>
