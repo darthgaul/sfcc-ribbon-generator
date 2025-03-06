@@ -12,7 +12,7 @@
             text-align: center;
             padding: 5px;
             margin: 0;
-            overflow: hidden;
+            overflow: hidden; /* Removed to allow scrolling within iframe */
         }
         #container {
             max-width: 500px;
@@ -21,6 +21,7 @@
             padding: 5px;
             border-radius: 3px;
             box-shadow: 0 0 3px rgba(0,0,0,0.5);
+            min-height: 100%; /* Ensure container height adjusts to content */
         }
         #upload-btn, #generate-btn, #go-back-btn, #download-btn {
             background-color: #4a90e2;
