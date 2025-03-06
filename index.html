@@ -394,9 +394,13 @@
         const sideBarsContainer = document.getElementById('side-bars');
         const addBarBtn = document.getElementById('add-bar');
         const customCanvas = document.getElementById('custom-canvas');
-        const customDownloadBtn = document.getElementById('custom-download-btn');
+        const customDownloadBtn = document.getElementById('custom-download-btn'); // Corrected definition
         const includeCentralCheckbox = document.getElementById('include-central');
         const customDownloadInstructions = document.getElementById('custom-download-instructions');
+
+        if (!centralSection || !centralWidthInput || !centralColorInput || !centralSwatch || !sideBarsContainer || !addBarBtn || !customCanvas || !customDownloadBtn || !includeCentralCheckbox || !customDownloadInstructions) {
+            console.error('One or more elements not found for customizable generator');
+        }
 
         let includeCentral = false;
         let centralWidth = 20;
@@ -515,10 +519,17 @@
         customDownloadBtn.addEventListener('click', () => {
             console.log('Custom Download button clicked');
             const dataUrl = customCanvas.toDataURL('image/png');
+            console.log('Custom Data URL length:', dataUrl.length); // Debug log
+            const blob = dataURLtoBlob(dataUrl);
+            const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.download = 'custom-ribbon.png';
-            link.href = dataUrl;
+            link.href = url;
+            link.target = '_blank';
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
             customDownloadInstructions.style.display = 'block';
         });
 
