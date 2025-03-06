@@ -24,81 +24,26 @@
             min-height: 100%;
             overflow: visible;
         }
-        .section {
-            margin-bottom: 20px;
-        }
+        .section { margin-bottom: 20px; }
         #upload-btn, #generate-btn, #go-back-btn, #download-btn, #add-bar, #custom-download-btn {
-            background-color: #4a90e2;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            margin: 5px;
-            cursor: pointer;
-            border-radius: 3px;
+            background-color: #4a90e2; color: white; border: none; padding: 5px 10px; margin: 5px; cursor: pointer; border-radius: 3px;
         }
         #upload-btn:hover, #generate-btn:hover, #go-back-btn:hover, #download-btn:hover, #add-bar:hover, #custom-download-btn:hover {
             background-color: #357abd;
         }
-        #canvas, #custom-canvas {
-            margin: 20px auto;
-            border: 1px solid #ffffff;
-        }
-        #logo-preview {
-            max-width: 60px;
-            max-height: 100px;
-            margin: 3px auto;
-            object-fit: contain;
-        }
-        #download-instructions, #custom-download-instructions {
-            display: none;
-            margin-top: 5px;
-            font-size: 12px;
-            color: #ffffff;
-        }
-        .button-group {
-            margin-top: 3px;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
-        .input-group {
-            margin: 10px 0;
-            text-align: left;
-        }
-        .bar-input {
-            margin: 5px 0;
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-        }
-        .bar-swatch {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            margin-left: 5px;
-            vertical-align: middle;
-        }
-        button:disabled {
-            background-color: #5a7ea5;
-            cursor: not-allowed;
-        }
+        #canvas, #custom-canvas { margin: 20px auto; border: 1px solid #ffffff; }
+        #logo-preview { max-width: 60px; max-height: 100px; margin: 3px auto; object-fit: contain; }
+        #download-instructions, #custom-download-instructions { display: none; margin-top: 5px; font-size: 12px; color: #ffffff; }
+        .button-group { margin-top: 3px; display: flex; justify-content: center; flex-wrap: wrap; gap: 4px; }
+        .input-group { margin: 10px 0; text-align: left; }
+        .bar-input { margin: 5px 0; padding: 5px; border: 1px solid #ccc; border-radius: 3px; }
+        .bar-swatch { display: inline-block; width: 20px; height: 20px; margin-left: 5px; vertical-align: middle; }
+        button:disabled { background-color: #5a7ea5; cursor: not-allowed; }
         @media (max-width: 480px) {
-            #container {
-                max-width: 100%;
-                padding: 10px;
-            }
-            #upload-btn, #generate-btn, #go-back-btn, #download-btn, #add-bar, #custom-download-btn {
-                padding: 4px 8px;
-                font-size: 10px;
-            }
-            #logo-preview {
-                max-width: 40px;
-                max-height: 80px;
-            }
-            #download-instructions, #custom-download-instructions {
-                font-size: 10px;
-            }
+            #container { max-width: 100%; padding: 10px; }
+            #upload-btn, #generate-btn, #go-back-btn, #download-btn, #add-bar, #custom-download-btn { padding: 4px 8px; font-size: 10px; }
+            #logo-preview { max-width: 40px; max-height: 80px; }
+            #download-instructions, #custom-download-instructions { font-size: 10px; }
         }
     </style>
 </head>
@@ -123,7 +68,7 @@
             <p id="download-instructions">If download doesn’t work, right-click the ribbon and save image as...</p>
         </div>
 
-        <!-- Customizable Ribbon Generator (Unchanged) -->
+        <!-- Customizable Ribbon Generator -->
         <div class="section">
             <h1>Customizable SFCC Sponsorship Ribbon Generator</h1>
             <p>Customize your ribbon by specifying bar count, widths, and colors. The design will be mirrored from the center.</p>
@@ -140,9 +85,7 @@
                 </div>
             </div>
             
-            <div id="side-bars">
-                <!-- Dynamically added side bar inputs -->
-            </div>
+            <div id="side-bars"></div>
             <button id="add-bar">Add Side Bar</button>
             
             <canvas id="custom-canvas" width="300" height="100"></canvas>
@@ -187,31 +130,77 @@
             if (!uploadedImage) return;
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+
             const colorThief = new ColorThief();
-            const palette = colorThief.getPalette(uploadedImage, 3); // Extract 3 colors from the logo
-            const colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`);
-            const totalStripes = 10; // Total number of bars (5 on each side)
+            const palette = colorThief.getPalette(uploadedImage, 7, 20); // Restore original palette extraction
+            let colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+
+            // Restore original color filtering
+            colors = colors.filter(color => {
+                const [r, g, b] = color.match(/\d+/g).map(Number);
+                const brightness = (r + g + b) / 3;
+                const isDark = brightness < 128;
+                const isBright = brightness > 200;
+                const isWhite = Math.abs(r - 255) < 20 && Math.abs(g - 255) < 20 && Math.abs(b - 255) < 20;
+                const isBlue = b > 50 && r < b * 1.5 && g < b * 1.5;
+                const isRed = r > 50 && b < r * 0.5 && g < r * 0.5;
+                return isDark || isBright || isWhite || isBlue || isRed;
+            });
+
+            const uniqueColors = [];
+            for (let i = 0; i < colors.length; i++) {
+                let isUnique = true;
+                for (let j = 0; j < uniqueColors.length; j++) {
+                    if (colorDistance(colors[i], uniqueColors[j]) < 100) {
+                        isUnique = false;
+                        break;
+                    }
+                }
+                if (isUnique) uniqueColors.push(colors[i]);
+            }
+            colors = uniqueColors;
+
+            if (!colors.some(color => {
+                const [r, g, b] = color.match(/\d+/g).map(Number);
+                return Math.abs(r - 255) < 20 && Math.abs(g - 255) < 20 && Math.abs(b - 255) < 20;
+            })) {
+                const hasWhite = palette.some(color => {
+                    const [r, g, b] = color;
+                    return Math.abs(r - 255) < 30 && Math.abs(g - 255) < 30 && Math.abs(b - 255) < 30;
+                });
+                if (hasWhite) colors.unshift('rgb(255, 255, 255)');
+            }
+
+            while (colors.length < 5) { // Ensure at least 5 colors for 5 bars per side
+                if (colors.length === 0) colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+                if (colors.length < 5) {
+                    const brightness = Math.random() < 0.5 ? Math.floor(Math.random() * 128) : 200 + Math.floor(Math.random() * 56);
+                    colors.push(`rgb(${brightness}, ${brightness}, ${brightness})`);
+                }
+            }
+
+            colors = shuffleArray(colors.slice(0, 5)); // Limit to 5 unique colors
+
+            const totalStripes = 10; // 5 bars per side
             const halfStripes = totalStripes / 2;
             const ribbonWidth = canvas.width;
             const halfWidth = ribbonWidth / 2;
 
-            // Generate random widths for the left side and reverse for the right
             const leftWidths = generateRandomWidths(halfStripes, halfWidth);
-            const rightWidths = leftWidths.slice().reverse();
+            const rightWidths = leftWidths.slice().reverse(); // Mirror widths correctly
             const fullWidths = [...leftWidths, ...rightWidths];
 
-            // Assign colors: left side uses original order, right side uses reversed order
-            const leftColors = colors.slice(0, halfStripes);
-            const rightColors = leftColors.slice().reverse(); // Reverse colors for mirroring
-            const fullColors = [...leftColors, ...rightColors];
+            // Assign colors: left uses original order, right uses reversed order
+            const leftColors = colors.slice(0, halfStripes); // 5 colors for left side
+            const rightColors = leftColors.slice().reverse(); // Reverse for mirroring
+            const fullColors = [...leftColors, ...rightColors]; // Combine for full ribbon
 
-            // Draw the ribbon
             let currentX = 0;
-            fullWidths.forEach((width, index) => {
-                ctx.fillStyle = fullColors[index % fullColors.length];
-                ctx.fillRect(currentX, 0, width, canvas.height);
-                currentX += width;
-            });
+            for (let i = 0; i < fullWidths.length; i++) {
+                ctx.fillStyle = fullColors[i % fullColors.length]; // Cycle through colors
+                ctx.fillRect(currentX, 0, fullWidths[i], canvas.height);
+                currentX += fullWidths[i];
+            }
 
             // Add horizontal lines
             const lineSpacing = canvas.height / 16;
@@ -230,6 +219,12 @@
             downloadBtn.disabled = false;
         }
 
+        function colorDistance(color1, color2) {
+            const [r1, g1, b1] = color1.match(/\d+/g).map(Number);
+            const [r2, g2, b2] = color2.match(/\d+/g).map(Number);
+            return Math.sqrt(Math.pow(r2 - r1, 2) + Math.pow(g2 - g1, 2) + Math.pow(b2 - b1, 2));
+        }
+
         function generateRandomWidths(numBars, targetSum) {
             let widths = Array(numBars).fill(0).map(() => Math.floor(Math.random() * 40) + 10);
             const currentSum = widths.reduce((sum, w) => sum + w, 0);
@@ -238,6 +233,14 @@
             const adjustedSum = widths.slice(0, -1).reduce((sum, w) => sum + w, 0);
             widths[numBars - 1] = targetSum - adjustedSum;
             return widths;
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
         }
 
         generateBtn.addEventListener('click', generateRibbon);
@@ -348,7 +351,7 @@
             const barDiv = document.createElement('div');
             barDiv.className = 'bar-input';
             barDiv.innerHTML = `
-                <span>Bar ${barIndex} (closest to center is 1)</span>
+                <span>Bar ${barIndex}</span>
                 <label>Width: <input type="number" class="bar-width" min="1" step="1" value="10"></label>
                 <label>Color: <input type="text" class="bar-color" pattern="#[0-9A-Fa-f]{6}" value="#FFFFFF"></label>
                 <span class="bar-swatch" style="background-color: #FFFFFF;"></span>
