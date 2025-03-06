@@ -199,6 +199,12 @@
             return widths;
         }
 
+        function colorDistance(color1, color2) {
+            const [r1, g1, b1] = color1;
+            const [r2, g2, b2] = color2;
+            return Math.sqrt((r2 - r1) ** 2 + (g2 - g1) ** 2 + (b2 - b1) ** 2);
+        }
+
         function generateRibbon() {
             if (!uploadedImage) return;
             const ctx = canvas.getContext('2d');
@@ -220,18 +226,47 @@
                 croppedCanvas.width, croppedCanvas.height  // Destination width, height
             );
 
-            // Extract colors from the cropped canvas
+            // Extract top 3 colors from the cropped image
             const colorThief = new ColorThief();
-            const palette = colorThief.getPalette(croppedCanvas, 5); // Extract 5 colors
-            let colors = palette.map(color => `rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+            const palette = colorThief.getPalette(croppedCanvas, 3); // Extract up to 3 colors
+            const colors = palette.map(color => [color[0], color[1], color[2]]); // RGB arrays
 
-            // Ensure at least 5 colors by duplicating if necessary
-            while (colors.length < 5) {
-                colors = colors.concat(colors);
+            // Determine number of dominant colors
+            const threshold = 50;
+            const d12 = colorDistance(colors[0], colors[1]);
+            const d13 = colorDistance(colors[0], colors[2]);
+            const d23 = colorDistance(colors[1], colors[2]);
+            let dominantColors;
+            if (d12 > threshold && d13 > threshold && d23 > threshold) {
+                dominantColors = colors.slice(0, 3); // 3 distinct colors
+            } else {
+                const pairs = [
+                    { colors: [colors[0], colors[1]], distance: d12 },
+                    { colors: [colors[0], colors[2]], distance: d13 },
+                    { colors: [colors[1], colors[2]], distance: d23 }
+                ].sort((a, b) => b.distance - a.distance);
+                dominantColors = pairs[0].distance > threshold ? pairs[0].colors : [colors[0]];
             }
-            colors = colors.slice(0, 5); // Limit to 5 colors
+            const k = dominantColors.length;
 
-            const shuffledColors = shuffleArray(colors); // Randomize the order
+            // Assign colors based on number of dominant colors
+            let leftColors;
+            if (k === 3) {
+                const [c1, c2, c3] = dominantColors;
+                leftColors = [c1, c2, c3, c2, c1]; // Mirror pattern with only 3 colors
+            } else if (k === 2) {
+                const [c1, c2] = dominantColors;
+                const neutral = [153, 153, 153]; // Medium gray (#999999)
+                leftColors = [c1, neutral, c2, neutral, c1];
+            } else { // k === 1
+                const c1 = dominantColors[0];
+                const neutral1 = [51, 51, 51]; // Dark gray (#333333)
+                const neutral2 = [204, 204, 204]; // Light gray (#CCCCCC)
+                leftColors = [c1, neutral1, neutral2, neutral1, c1];
+            }
+
+            const rightColors = leftColors.slice().reverse();
+            const fullColors = [...leftColors, ...rightColors];
 
             const totalStripes = 10; // 5 bars per side
             const halfStripes = totalStripes / 2;
@@ -243,15 +278,10 @@
             const rightWidths = leftWidths.slice().reverse(); // Mirror widths
             const fullWidths = [...leftWidths, ...rightWidths];
 
-            // Assign shuffled colors with mirroring
-            const leftColors = shuffledColors.slice(0, halfStripes);
-            const rightColors = leftColors.slice().reverse();
-            const fullColors = [...leftColors, ...rightColors];
-
             // Draw the ribbon
             let currentX = 0;
             for (let i = 0; i < fullWidths.length; i++) {
-                ctx.fillStyle = fullColors[i];
+                ctx.fillStyle = `rgb(${fullColors[i][0]}, ${fullColors[i][1]}, ${fullColors[i][2]})`;
                 ctx.fillRect(currentX, 0, fullWidths[i], canvas.height);
                 currentX += fullWidths[i];
             }
